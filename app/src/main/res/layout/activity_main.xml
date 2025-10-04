@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/topOfPageBlanker"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text=""
+        android:textSize="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+<!--      -->
+    <Button
+        android:id="@+id/toggleButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="開始"
+        app:layout_constraintTop_toBottomOf="@+id/topOfPageBlanker"
+        />
+
+    <TextView
+        android:id="@+id/tvVolumeValue"
+        android:layout_width="160dp"
+        android:layout_height="42dp"
+        android:layout_marginTop="20dp"
+        android:text="音量調整"
+        android:textSize="18dp"
+        app:layout_constraintTop_toBottomOf="@+id/toggleButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_goneMarginStart="16dp"
+        />
+
+    <SeekBar
+        android:id="@+id/volumeSeekBar"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginBottom="16dp"
+        android:thumb="@drawable/custom_thumb"
+        android:max="100"
+        app:layout_constraintTop_toBottomOf="@+id/tvVolumeValue"
+        />
+    <Button
+        android:id="@+id/presetButtonMA"
+        android:layout_width="196dp"
+        android:layout_height="wrap_content"
+        android:text="全体を初期設定に戻す"
+        android:layout_marginTop="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toggleButton"
+        />
+    <ImageView
+        android:id="@+id/up_msg_bord"
+        android:layout_marginTop="4dp"
+        android:layout_width="match_parent"
+        android:layout_height="94dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/up_msg_bord"
+        app:layout_constraintTop_toBottomOf="@+id/volumeSeekBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:text="動作停止中"
+        android:textColor="#e95464"
+        android:textSize="25sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/volumeSeekBar" />
+
+
+    <ImageView
+        android:id="@+id/centerImage"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_marginTop="18dp"
+        android:src="@drawable/center_image"
+        app:layout_constraintTop_toBottomOf="@+id/statusText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+    <ImageView
+        android:id="@+id/dn_msg_bord"
+        android:layout_marginTop="144dp"
+        android:layout_width="match_parent"
+        android:layout_height="94dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/dn_msg_bord"
+        app:layout_constraintTop_toTopOf="@+id/centerImage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+    <TextView
+        android:id="@+id/messageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginTop="20dp"
+        android:text="   ・・・・・"
+        android:textColor="#111111"
+        android:textSize="25sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/centerImage" />
+
+    <TextView
+        android:id="@+id/textOfNoiseFilter"
+        android:text="ノイズ除去（搭載スマホのみ対応）"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/emphasisSwitch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_goneMarginStart="16dp"
+        android:layout_margin="8dp"
+        />
+    <Switch
+        android:id="@+id/noiseFilterSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/emphasisSwitch"
+        android:layout_margin="8dp"
+        />
+
+     <TextView
+        android:text="ノイズ低減＆音声クリア"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/button_settings"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_goneMarginStart="16dp"
+        android:layout_margin="8dp"
+        />
+    <Switch
+        android:id="@+id/emphasisSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toTopOf="@+id/button_settings"
+        android:layout_margin="8dp"
+        />
+
+    <Button
+        android:id="@+id/button_settings"
+        android:layout_width="128dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="詳細設定へ"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_margin="16dp"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
