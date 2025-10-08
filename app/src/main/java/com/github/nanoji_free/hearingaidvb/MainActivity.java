@@ -144,10 +144,8 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
 
                         // 作動中のときだけサービスに通知
                         if (isStreaming) {
-                            Intent i = new Intent(com.github.nanoji_free.hearingaidvb.MainActivity.this, AudioStreamService.class);
-                            i.putExtra(PrefKeys.EXTRA_APP_VOLUME, vol)
-                            .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
-                            startService(i);
+                           startService(buildStreamingIntent(false)
+                           );
                         }
                     }
                 });
@@ -165,25 +163,7 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
                 // サービスを一度停止して再起動することでマイク設定を反映
                 stopService(new Intent(MainActivity.this, AudioStreamService.class));
 
-                float volumeToRestore = prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f);
-                float balanceToRestore  = prefs.getFloat(PrefKeys.PREF_BALANCE, 0f);
-                boolean noiseFilter     = prefs.getBoolean(PrefKeys.PREF_NOISE_FILTER, false);
-                boolean emphasisEnabled = prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false);
-                boolean micType = prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false);
-                float volumeBoost = prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0.0f);
-                boolean superEmphasis = prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false);
-
-                Intent i = new Intent(MainActivity.this, AudioStreamService.class)
-                    .putExtra(PrefKeys.EXTRA_APP_VOLUME, volumeToRestore)
-                        .putExtra(PrefKeys.EXTRA_APP_VOLUME, volumeToRestore)
-                        .putExtra(PrefKeys.EXTRA_BALANCE, balanceToRestore)
-                        .putExtra(PrefKeys.EXTRA_NOISE_FILTER, noiseFilter)
-                        .putExtra(PrefKeys.EXTRA_EMPHASIS, emphasisEnabled)
-                        .putExtra(PrefKeys.EXTRA_OPTION_MIC, micType)
-                        .putExtra(PrefKeys.EXTRA_VOLUME_BOOST, volumeBoost)
-                        .putExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, superEmphasis)
-                        .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true);
-                startService(i);
+                ContextCompat.startForegroundService(this, buildStreamingIntent(true));
             }
         });
 
@@ -195,11 +175,7 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
                      .apply();
             // Service にノイズ抑制の ON/OFF を通知
             if (isStreaming) {
-                Intent i = new Intent(MainActivity.this, AudioStreamService.class);
-                i.putExtra(PrefKeys.EXTRA_NOISE_FILTER, isChecked)
-                        .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
-                // サービスが既にフォアグラウンドで動いているなら普通に startService でOK
-                startService(i);
+                startService(buildStreamingIntent(false));
             }
         });
 
@@ -217,11 +193,7 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
             }
 
             if (isStreaming) {
-                Intent i = new Intent(MainActivity.this, AudioStreamService.class);
-                i.putExtra(PrefKeys.EXTRA_EMPHASIS, isChecked)
-                        .putExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false))
-                        .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
-                startService(i);
+                startService(buildStreamingIntent(false));
             }
         });
 
@@ -305,14 +277,10 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
     @Override
     protected void onResume() {
         super.onResume();
-        updateUiFromPrefs(); // ← SettingsActivityから戻ったときにUIを再描画
+        updateUiFromPrefs(); // ← prefsからUIを再描画
 
         if (isStreaming) {
-            float savedVolume = prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f);
-            Intent i = new Intent(this, AudioStreamService.class)
-                    .putExtra(PrefKeys.EXTRA_APP_VOLUME, savedVolume)
-                    .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
-            startService(i);
+            startService(buildStreamingIntent(false));
         }
     }
 
@@ -327,17 +295,7 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
     }
 
     private void startStreaming() {
-        Intent intent = new Intent(this, AudioStreamService.class)
-            //.putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true);
-                .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true)
-                .putExtra(PrefKeys.EXTRA_APP_VOLUME, prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f))
-                .putExtra(PrefKeys.EXTRA_BALANCE, prefs.getFloat(PrefKeys.PREF_BALANCE, 0f))
-                .putExtra(PrefKeys.EXTRA_NOISE_FILTER, prefs.getBoolean(PrefKeys.PREF_NOISE_FILTER, false))
-                .putExtra(PrefKeys.EXTRA_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false))
-                .putExtra(PrefKeys.EXTRA_OPTION_MIC, prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false))
-                .putExtra(PrefKeys.EXTRA_VOLUME_BOOST, prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0.0f))
-                .putExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false));
-        ContextCompat.startForegroundService(this, intent);
+        ContextCompat.startForegroundService(this, buildStreamingIntent(true));
         isStreaming = true;
         prefs.edit().putBoolean("isStreaming", true).apply();
         updateUi();
@@ -376,4 +334,17 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
             emphasisSwitch.setChecked(prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false));
         }
     }
+
+     private Intent buildStreamingIntent(boolean requestStreaming) {
+        return new Intent(this, AudioStreamService.class)
+             .putExtra(PrefKeys.EXTRA_APP_VOLUME, prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f))
+             .putExtra(PrefKeys.EXTRA_BALANCE, prefs.getFloat(PrefKeys.PREF_BALANCE, 0f))
+             .putExtra(PrefKeys.EXTRA_NOISE_FILTER, prefs.getBoolean(PrefKeys.PREF_NOISE_FILTER, false))
+             .putExtra(PrefKeys.EXTRA_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false))
+             .putExtra(PrefKeys.EXTRA_OPTION_MIC, prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false))
+             .putExtra(PrefKeys.EXTRA_VOLUME_BOOST, prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0.0f))
+             .putExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false))
+             .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, requestStreaming);
+        }
+
 }

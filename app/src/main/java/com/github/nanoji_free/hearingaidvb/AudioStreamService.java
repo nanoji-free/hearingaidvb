@@ -73,7 +73,7 @@ public class AudioStreamService extends Service {
     private double highCutHpAlpha = 0.0;
     private double highCutLpAlpha = 0.0;
     private double highCutHpPrevIn, highCutHpPrevOut, highCutLpPrevOut;
-    private double highCutLowHz  = 4400.0;//広域減衰の幅の下側（初期値は7500）
+    private double highCutLowHz  = 6000.0;//広域減衰の幅の下側（初期値は7500）
     private double highCutHighHz = 20000.0;//広域元帥の幅の上側（初期値は18000）
 
     private volatile double highBandCutDepth = 0.97; // 高域減衰の深さ(初期値は0.90）
@@ -141,62 +141,78 @@ public class AudioStreamService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startForeground(1, buildNotification());
+
+        SharedPreferences prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+
+        // Intentが空でもSharedPreferencesから補完
+        float appVolume = intent != null && intent.hasExtra(PrefKeys.EXTRA_APP_VOLUME)
+                ? intent.getFloatExtra(PrefKeys.EXTRA_APP_VOLUME, 0.65f)
+                : prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f);
+
+        float balance = intent != null && intent.hasExtra(PrefKeys.EXTRA_BALANCE)
+                ? intent.getFloatExtra(PrefKeys.EXTRA_BALANCE, 0f)
+                : prefs.getFloat(PrefKeys.PREF_BALANCE, 0f);
+
+        boolean noiseFilterEnabled = intent != null && intent.hasExtra(PrefKeys.EXTRA_NOISE_FILTER)
+                ? intent.getBooleanExtra(PrefKeys.EXTRA_NOISE_FILTER, false)
+                : prefs.getBoolean(PrefKeys.PREF_NOISE_FILTER, false);
+
+        boolean emphasisEnabled = intent != null && intent.hasExtra(PrefKeys.EXTRA_EMPHASIS)
+                ? intent.getBooleanExtra(PrefKeys.EXTRA_EMPHASIS, false)
+                : prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false);
+        this.emphasisEnabled = emphasisEnabled;
+
+        boolean micType = intent != null && intent.hasExtra(PrefKeys.EXTRA_OPTION_MIC)
+                ? intent.getBooleanExtra(PrefKeys.EXTRA_OPTION_MIC, false)
+                : prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false);
+
+        float volumeBoost = intent != null && intent.hasExtra(PrefKeys.EXTRA_VOLUME_BOOST)
+                ? intent.getFloatExtra(PrefKeys.EXTRA_VOLUME_BOOST, 0.0f)
+                : prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0.0f);
+        this.volumeBoost = volumeBoost;
+
+        boolean superEmphasis = intent != null && intent.hasExtra(PrefKeys.EXTRA_SUPER_EMPHASIS)
+                ? intent.getBooleanExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, false)
+                : prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false);
+        this.superEmphasis = superEmphasis;
+
+        // Intentがあれば状態を更新（prefsにも反映）
         if (intent != null) {
-            // 音声強調リクエスト
             if (intent.hasExtra(PrefKeys.EXTRA_EMPHASIS)) {
-                emphasisEnabled = intent.getBooleanExtra(PrefKeys.EXTRA_EMPHASIS, false);
                 prefs.edit().putBoolean(PrefKeys.PREF_EMPHASIS, emphasisEnabled).apply();
             }
-            // ボリューム更新リクエスト
             if (intent.hasExtra(PrefKeys.EXTRA_APP_VOLUME)) {
-                //setAppVolume(intent.getFloatExtra(PrefKeys.EXTRA_APP_VOLUME, appVolume));//直接ボリューム全体を持ち上げていた。下の２行に更新。
-                float vol = intent.getFloatExtra(PrefKeys.EXTRA_APP_VOLUME, appVolume);
-                appVolume = vol;
-                mapSliderToGains(vol);
+                mapSliderToGains(appVolume);
             }
-            // ノイズフィルタ切替リクエスト
-            if (intent.hasExtra(PrefKeys.EXTRA_NOISE_FILTER)) {
-                noiseFilterEnabled = intent.getBooleanExtra(PrefKeys.EXTRA_NOISE_FILTER, false);
-                // 既に生成済みなら即切り替え
-                if (noiseSuppressor != null) {
-                    noiseSuppressor.setEnabled(noiseFilterEnabled);
-                }
+            if (intent.hasExtra(PrefKeys.EXTRA_NOISE_FILTER) && noiseSuppressor != null) {
+                noiseSuppressor.setEnabled(noiseFilterEnabled);
             }
-            //　マイク切替リクエスト
             if (intent.hasExtra(PrefKeys.EXTRA_OPTION_MIC)) {
-                boolean useExternalMic = intent.getBooleanExtra(PrefKeys.EXTRA_OPTION_MIC, false);
-                prefs.edit().putBoolean(PrefKeys.PREF_MIC_TYPE, useExternalMic).apply();
-                // micType に応じた AudioSource 切り替えは startStreaming() に反映
+                prefs.edit().putBoolean(PrefKeys.PREF_MIC_TYPE, micType).apply();
             }
-            //　音声強調ブーストスイッチのリクエスト
             if (intent.hasExtra(PrefKeys.EXTRA_SUPER_EMPHASIS)) {
-                superEmphasis = intent.getBooleanExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, false);
                 prefs.edit().putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, superEmphasis).apply();
             }
-            //　音量ブーストのリクエスト（対応中）
             if (intent.hasExtra(PrefKeys.EXTRA_VOLUME_BOOST)) {
-                volumeBoost = intent.getFloatExtra(PrefKeys.EXTRA_VOLUME_BOOST, 0.0f);
                 prefs.edit().putFloat(PrefKeys.PREF_VOLUME_BOOST, volumeBoost).apply();
-                //boostGain = BOOST_BASE + (volumeBoost * 2f); // DSP処理に反映
             }
-            // バランス更新リクエスト
             if (intent.hasExtra(PrefKeys.EXTRA_BALANCE)) {
-                float newBalance = intent.getFloatExtra(PrefKeys.EXTRA_BALANCE, balance);
-                setBalance(newBalance);
-                prefs.edit().putFloat(PrefKeys.PREF_BALANCE, newBalance).apply();
+                setBalance(balance);
+                prefs.edit().putFloat(PrefKeys.PREF_BALANCE, balance).apply();
             }
+
             boolean requestStreaming = intent.getBooleanExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
             if (requestStreaming && !isStreaming) {
                 startStreaming();
             }
         }
 
-        // 通常起動：フォアグラウンド化＋ストリーミング開始
-        startForeground(1, buildNotification());
-        // 読み込んだ設定でストリーミング開始前に準備を整える
-        setAppVolume(appVolume);  // 初回起動時も音量反映
+        // 音量を反映（Intentが空でも補完済み）
+        setAppVolume(appVolume);
+
         return START_STICKY;
     }
+
     private Notification buildNotification() {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("耳みみエイド")
@@ -675,23 +691,23 @@ public class AudioStreamService extends Service {
     private void applySuperEmphasisPreset(int sampleRate) {
 
         xManualGain       = manualGain + 0.5f;//出力する音量の強調
-        boostGainMore     = 8.5f;//出力する音量の再強調
+        boostGainMore     = 10.0f;
 
         cutLowHz          = 15.0;//bandCutする帯域の下限
-        cutHighHz         = 250.0;//bandCutする帯域の上限
+        cutHighHz         = 425.0;//bandCutする帯域の上限
         bandCutDepth      = 0.98f;//bandCutの深さ
 
-        lowCutFreq         = 250.0;//bandPassする帯域指定の下側
-        highCutFreq        = 1000.0;//bandPassする帯域指定の上側
+        lowCutFreq         = 150.0;//bandPassする帯域指定の下側
+        highCutFreq        = 900.0;//bandPassする帯域指定の上側
 
         highCutLowHz       = 4000.0;
         highCutHighHz      = 20000.0;
-        highBandCutDepth   = 0.99f;//4000～20000、広域バンドカットの深さ
+        highBandCutDepth   = 0.995f;//4000～20000、広域バンドカットの深さ
 
         boostLowHz         = 1000.0;//音声強調を行う帯域（下側）
         boostHighHz        = 2800.0;//音声強調を行う帯域（上側）
 
-        threshold          = 0.030f;//閾値より小さい音はノイズとしてカット
+        threshold          = 0.045f;//閾値より小さい音はノイズとしてカット
         //2800～4000Hz帯域は現時点では生音のまま
         //lpPrevOutputの値を調整したカットも検討してもいいかも。
 

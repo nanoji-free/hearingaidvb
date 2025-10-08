@@ -93,17 +93,12 @@ public class SettingsActivity extends AppCompatActivity {
                         .putBoolean(PrefKeys.PREF_EMPHASIS, true)
                         .apply();
             }
-
+            boolean isStreaming = prefs.getBoolean("isStreaming", false);
             if (isStreaming) {
-                Intent intent = new Intent(SettingsActivity.this, AudioStreamService.class)
-                    .putExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, isChecked)
-                    .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
-                if(isChecked){
-                    intent.putExtra(PrefKeys.EXTRA_EMPHASIS, true);
-                }
-                startService(intent);
+                startService(buildStreamingIntent(false));
             }
         });
+
         //音量増幅シークバーのテキスト
         volBoostText = findViewById(R.id.volBoost);
         // 初期表示（Prefsから取得して反映）
@@ -142,12 +137,7 @@ public class SettingsActivity extends AppCompatActivity {
                         .putFloat(PrefKeys.PREF_VOLUME_BOOST, volumeBoost)
                         .apply();
 
-                if (isStreaming) {
-                    Intent intent = new Intent(SettingsActivity.this, AudioStreamService.class)
-                            .putExtra(PrefKeys.EXTRA_VOLUME_BOOST, volumeBoost)
-                            .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
-                    startService(intent);
-                }
+                startService(buildStreamingIntent(false));
             }
         });
 
@@ -204,12 +194,13 @@ public class SettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_NOISE_FILTER, false)
                     .putBoolean(PrefKeys.PREF_EMPHASIS, false)
                     .putFloat(PrefKeys.PREF_BALANCE, 0f)
-                    .putFloat(PrefKeys.PREF_VOLUME_BOOST, volumeBoost)
+                    .putFloat(PrefKeys.PREF_VOLUME_BOOST, 0f)
                     .putBoolean(PrefKeys.PREF_MIC_TYPE, false)
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false)
                     .apply();
+            // volumeBoost の変数も初期化
+            volumeBoost = 0f;
 
-            SharedPreferences prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);//試しに移動
             //  UI に反映(nullチェックをして反映）
             if (noiseFilterSwitch != null) {
                 noiseFilterSwitch.setChecked(false);
@@ -232,46 +223,18 @@ public class SettingsActivity extends AppCompatActivity {
                     volBoostText.setText("音量増量ブースター（" + Math.round(volumeBoost * 100) + "%）");
                 }
             }
-            //Serviceが起動中なら、Intentを明示的に再送信
-            //SharedPreferences prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);//ここからお試しに仮移動してみる？
-            boolean isStreamingNow = prefs.getBoolean("isStreaming", false);
-            if (isStreamingNow) {
-                // 一度サービスを停止して再開（マイクの切り替えの関係）
-                stopService(new Intent(SettingsActivity.this, AudioStreamService.class));
-
-                float restoredBalance = prefs.getFloat(PrefKeys.PREF_BALANCE, 0f);
-                boolean restoredNoise = prefs.getBoolean(PrefKeys.PREF_NOISE_FILTER, false);
-                boolean restoredEmphasis = prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false);
-                float restoredVolume = prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f); // 念のため再取得
-
-                Intent i = new Intent(SettingsActivity.this, AudioStreamService.class)
-                        .putExtra(PrefKeys.EXTRA_APP_VOLUME, restoredVolume)
-                        .putExtra(PrefKeys.EXTRA_VOLUME_BOOST, volumeBoost)
-                        .putExtra(PrefKeys.EXTRA_NOISE_FILTER, restoredNoise)
-                        .putExtra(PrefKeys.EXTRA_EMPHASIS, restoredEmphasis)
-                        .putExtra(PrefKeys.EXTRA_OPTION_MIC, false)
-                        .putExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, false)
-                        .putExtra(PrefKeys.EXTRA_BALANCE, restoredBalance)
-                        .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true);
-                startService(i);
-
-
+            boolean isStreaming = prefs.getBoolean("isStreaming", false);
+            if (isStreaming) {
+                startService(buildStreamingIntent(false));
             }
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                    Intent confirmIntent = new Intent(SettingsActivity.this, AudioStreamService.class)
-                            .putExtra(PrefKeys.EXTRA_APP_VOLUME, 0.65f)
-                            .putExtra(PrefKeys.EXTRA_BALANCE, 0f)
-                            .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
-                SettingsActivity.this.startService(confirmIntent);
-                }, 100);
-
         });
 
         //「お知らせ」ボタン
         addButton = findViewById(R.id.addButton);
         addButton.setOnClickListener(v -> {
-            //ここに、お知らせボタンの内容を実装する
-
+            //ここに、お知らせボタンの内容を実装する（作業中）
+            Intent intent = new Intent(SettingsActivity.this, NoticeActivity.class);
+            startActivity(intent);
         });
 
         // 「使い方ガイド」ボタン
@@ -361,6 +324,19 @@ public class SettingsActivity extends AppCompatActivity {
         if (volBoostText != null) {
             volBoostText.setText("音量増量ブースター（" + Math.round(volumeBoost * 100) + "%）");
         }
+        startService(buildStreamingIntent(false));
+    }
+
+    private Intent buildStreamingIntent(boolean requestStreaming) {
+        return new Intent(SettingsActivity.this, AudioStreamService.class)
+                .putExtra(PrefKeys.EXTRA_APP_VOLUME, prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f))
+                .putExtra(PrefKeys.EXTRA_BALANCE, prefs.getFloat(PrefKeys.PREF_BALANCE, 0f))
+                .putExtra(PrefKeys.EXTRA_NOISE_FILTER, prefs.getBoolean(PrefKeys.PREF_NOISE_FILTER, false))
+                .putExtra(PrefKeys.EXTRA_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false))
+                .putExtra(PrefKeys.EXTRA_OPTION_MIC, prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false))
+                .putExtra(PrefKeys.EXTRA_VOLUME_BOOST, prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0.0f))
+                .putExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false))
+                .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, requestStreaming);
     }
 }
 
