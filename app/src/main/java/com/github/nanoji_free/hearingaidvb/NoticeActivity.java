@@ -57,7 +57,6 @@ public class NoticeActivity extends AppCompatActivity{
                     currentVersionCode = packageInfo.versionCode;
                 }
 
-//
                 StringBuilder messageBuilder = new StringBuilder();
 
                 // 🔔 アップデート通知を先頭に追加

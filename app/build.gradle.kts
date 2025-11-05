@@ -1,5 +1,7 @@
 plugins {
     id("com.android.application")
+    id("com.google.gms.google-services")      // Firebase共通プラグイン
+    id("com.google.firebase.crashlytics")      // Crashlyticsプラグイン
 }
 
 android {
@@ -44,4 +46,6 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    implementation("com.google.firebase:firebase-crashlytics:18.6.1")//FirebaseCrashlyticsの追加を宣言
+    implementation("com.google.firebase:firebase-analytics:21.5.0")//FirebaseAnalyticsの追加を宣言
 }

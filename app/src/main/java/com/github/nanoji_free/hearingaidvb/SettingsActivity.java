@@ -1,14 +1,22 @@
 package com.github.nanoji_free.hearingaidvb;
 
-// TODO:  「お知らせ」ボタンの中身の実装が必要！　-> アドレスを取得する必要あり（WebViewでgoogleドライブへの誘導を検討中）
-// TODO: バージョンアップのお知らせを把握するためのコードも実装する（MainActivity.javaかな？）
+// TODO: BillingLibruaryの関連コードの実装
+// TODO: MainActivityの下側の吹き出しに関する対応（アプデアリなどの表示）
+// TODO: EasySettingsActivityの設計と実装（簡単設定、卓上モード・テレビ視聴モード・屋外モード、ユーザープリセット３つ）
+// TODO: 本番用JSONの準備、現状のテスト用のコードからの更新
+// TODO: GooglePlayConsoleの準備
+// TODO: キャラクター変更をするための仕組みの検討と実装
 
+import android.Manifest;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,6 +26,7 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.nanoji_free.hearingaidvb.PrefKeys;
 import com.github.nanoji_free.hearingaidvb.SettingsUtils;
@@ -25,8 +34,10 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
 
 public class SettingsActivity extends AppCompatActivity {
     private SharedPreferences prefs;
+    private ConstraintLayout rootLayout;
     private boolean isStreaming = false;
     float volumeBoost = 0.00f;
+    private float depthScaler = 1.0f;
     private Switch noiseFilterSwitch;
     private Switch emphasisSwitch;
     private Switch optionMic;
@@ -36,6 +47,7 @@ public class SettingsActivity extends AppCompatActivity {
     private SeekBar stSeekBar;
     private Button balPresetButton;
     private Button presetButton;
+    private Button toChangeViewButton;
     private Button addButton;
     private Button infoButton;
     private Button noticeButton;
@@ -46,6 +58,11 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
+
+        ConstraintLayout rootLayout = findViewById(R.id.rootLayout);
+        if (rootLayout != null) {
+            DispHelper.applySavedBackground(this, rootLayout);
+        }
 
         noiseFilterSwitch = findViewById(R.id.noiseFilterSwitch);
         emphasisSwitch = findViewById(R.id.emphasisSwitch);
@@ -65,7 +82,7 @@ public class SettingsActivity extends AppCompatActivity {
         optionMic.setOnCheckedChangeListener((btn, isChecked) -> {
             //外部マイクの切り替えを組み込む
             //　設定の保存
-            prefs.edit()//状態の保存のみ先行して作成20250906
+            prefs.edit()
                     .putBoolean(PrefKeys.PREF_MIC_TYPE, isChecked)
                     .apply();
             // サービスへの通知
@@ -132,9 +149,11 @@ public class SettingsActivity extends AppCompatActivity {
                 // 設定保存やサービス通知をここに追加
                 int progress = seekBar.getProgress(); // 0〜100
                 volumeBoost = progress / 100f;        // 0.0〜1.0 に正規化
+                depthScaler = Math.max(0.3f, 1.0f - volumeBoost);
 
                 prefs.edit()
                         .putFloat(PrefKeys.PREF_VOLUME_BOOST, volumeBoost)
+                        .putFloat(PrefKeys.PREF_DEPTH_SCALER, depthScaler)
                         .apply();
 
                 startService(buildStreamingIntent(false));
@@ -195,6 +214,7 @@ public class SettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_EMPHASIS, false)
                     .putFloat(PrefKeys.PREF_BALANCE, 0f)
                     .putFloat(PrefKeys.PREF_VOLUME_BOOST, 0f)
+                    .putFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f)
                     .putBoolean(PrefKeys.PREF_MIC_TYPE, false)
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false)
                     .apply();
@@ -225,8 +245,20 @@ public class SettingsActivity extends AppCompatActivity {
             }
             boolean isStreaming = prefs.getBoolean("isStreaming", false);
             if (isStreaming) {
-                startService(buildStreamingIntent(false));
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    startService(buildStreamingIntent(false));
+                } else {
+                    Toast.makeText(this, "マイク権限が必要です。設定から許可してください。", Toast.LENGTH_LONG).show();
+                }
             }
+        });
+
+        //「画面設定へ」遷移ボタン
+        toChangeViewButton = findViewById(R.id.toChangeViewButton);
+        toChangeViewButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DisplaySettingsActivity.class);
+            startActivity(intent);
         });
 
         //「お知らせ」ボタン
@@ -279,12 +311,14 @@ public class SettingsActivity extends AppCompatActivity {
                             "特に骨伝導ワイヤレスイヤホンと組み合わせによる聴覚支援補助を目指しています。\n\n" +
                             "集音ツールとしてテーブルの上やテレビの近くにスマートフォンを置いてご活用ください。\n" +
                             "(ワイヤレスイヤホンを使用すると、音声を転送する関係上、音声の遅延が発生することがあります。)\n\n"+
-                            "ポケットにスマートフォンを入れて使用する場合などは、アプリの詳細画面から外部マイクを使用しない設定に切り替えることをお勧めします。\n"+
+                            "ポケットにスマートフォンを入れて使用する場合などは、アプリの詳細画面から外部マイクを使用しない設定に切り替えるか、ノイズ除去スイッチをオンにした状態で使用することをお勧めします。\n"+
                             "また、その際は音声の遅延防止の観点などから有線のイヤホンをご利用をおすすめします。\n\n"+
                             "屋外で使用するシチュエーションなど様々な状況に対する対応を目的に「外部マイクの使用」「左右スピーカーのバランス調整」「音声強調の強化」「音量の増強」などの機能を設けています。必要に応じた調整をしてご利用ください。\n\n"+
                             "ノイズ除去機能を搭載したスマホでは、その機能を利用することもできるようにしています。必要に応じてご活用ください。\n\n"+
                             "イヤホンからの音漏れや振動の漏れが原因でハウリングする場合があります。\n"+
-                            "スマホとイヤホンの距離や、音量の調整をすることで改善する場合があります。\n\n\n"+
+                            "スマホとイヤホンの距離や、音量の調整をすることで改善する場合があります。\n\n"+
+                            "スマホのメモリが不足した場合、自動的に状況を改善する機能を設けています。その機能が働いた場合には１～２秒程度音声が停止し、ノイズ除去機能が停止することがあります。その場合には必要に応じてノイズ除去スイッチを再度オンにしてご利用ください\n\n"+
+                            "画面に表示する画像を選択することができますが、端末のメモリの状況によっては画像がリアルタイムで変更されない場合があります。その場合は一度アプリを終了し、改めて再開してください。\n\n\n"+
                             "本アプリに起因する損害は、その一切を当方では負いかねますのでご了承の上、本アプリをご利用下さい。\n\n"
             );
 
@@ -303,6 +337,13 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (rootLayout == null) {
+            rootLayout = findViewById(R.id.rootLayout);
+        }
+
+        DispHelper.applySavedBackground(this, rootLayout);
+
         isStreaming = prefs.getBoolean("isStreaming", false);
 
         if (optionMic != null) {
@@ -324,7 +365,12 @@ public class SettingsActivity extends AppCompatActivity {
         if (volBoostText != null) {
             volBoostText.setText("音量増量ブースター（" + Math.round(volumeBoost * 100) + "%）");
         }
-        startService(buildStreamingIntent(false));
+        if (prefs.contains(PrefKeys.PREF_DEPTH_SCALER)) {
+            depthScaler = prefs.getFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f);
+        } else {
+            depthScaler = 1.0f;
+        }
+            startService(buildStreamingIntent(false));
     }
 
     private Intent buildStreamingIntent(boolean requestStreaming) {
@@ -335,6 +381,7 @@ public class SettingsActivity extends AppCompatActivity {
                 .putExtra(PrefKeys.EXTRA_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false))
                 .putExtra(PrefKeys.EXTRA_OPTION_MIC, prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false))
                 .putExtra(PrefKeys.EXTRA_VOLUME_BOOST, prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0.0f))
+                .putExtra(PrefKeys.EXTRA_DEPTH_SCALER, prefs.getFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f))
                 .putExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false))
                 .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, requestStreaming);
     }

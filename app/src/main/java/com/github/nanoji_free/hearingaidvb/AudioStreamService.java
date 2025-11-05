@@ -11,10 +11,11 @@ import android.content.SharedPreferences;
 import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
+import android.os.Debug;
+import android.os.Handler;
 import android.os.IBinder;
 import android.media.audiofx.NoiseSuppressor;
 import android.util.Pair;
@@ -22,8 +23,12 @@ import android.os.Process;
 import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
-import com.github.nanoji_free.hearingaidvb.PrefKeys;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 
 public class AudioStreamService extends Service {
@@ -39,6 +44,25 @@ public class AudioStreamService extends Service {
     public static final String EXTRA_VOLUME = "extra_volume";
     private AudioRecord audioRecord;
     private AudioTrack audioTrack;
+    // メモリ監視用
+    private Handler memoryHandler = new Handler();
+    private Runnable memoryCheckRunnable = new Runnable() {
+        @Override
+        public void run() {
+            long used = Debug.getNativeHeapAllocatedSize();
+            long max = Runtime.getRuntime().maxMemory();
+            float usageRatio = (float) used / max;
+            if (used > max * 0.8) {
+                Log.w(TAG, "メモリ圧迫検知 → 音声処理を一時停止");
+                handleMemoryPressure();
+                //ダイアログでユーザーに一時停止した理由を明示する。★★★
+                //停止した日時を取得しダイアログのメッセージ用のテキストデータを作成
+                //ダイアログ表示、ただし表示はアクティビティ側で行う必要があるので検討別途！
+                showMemoryNotification(); // 通知表示を追加
+            }
+            memoryHandler.postDelayed(this, 10000); // 10秒ごとにチェック
+        }
+    };
 
     private float mBalance = 0f;
     private Thread streamThread;
@@ -76,6 +100,16 @@ public class AudioStreamService extends Service {
     private double highCutLowHz  = 6000.0;//広域減衰の幅の下側（初期値は7500）
     private double highCutHighHz = 20000.0;//広域元帥の幅の上側（初期値は18000）
 
+    // --- ノッチフィルタ用の狭帯域 ---（例：金属音・打撃音の抑制）（調整中。330行目と最後のメソッドも参照）
+    private double notchLowHz = 2250.0;   // 下限周波数
+    private double notchHighHz = 2450.0;  // 上限周波数
+    private double notchDepth = 0.95;     // 減衰の深さ（0.0〜1.0）
+    private double notchHpAlpha = 0.0;
+    private double notchLpAlpha = 0.0;
+    private double notchHpPrevIn, notchHpPrevOut, notchLpPrevOut;
+
+
+
     private volatile double highBandCutDepth = 0.97; // 高域減衰の深さ(初期値は0.90）
 
     //　volumeBoost関係（音量の限界突破のようなブースト）、SettingsActivityから反映
@@ -83,6 +117,7 @@ public class AudioStreamService extends Service {
     private float XvolZ = 0.2f; // 再生音量強化係数（appVolumeに追加する数値の係数）
     private float volumeBoost = 0.0f;
     private float boostGainMore = 0.5f; // 補正用の追加ゲイン
+    private float depthScaler = 1.0f;
 
     // ===== 音量＆ブーストマッピング用の定数 =====
     private static final float MAX_APP_VOLUME = 0.5f;   // 全体音量の上限
@@ -171,6 +206,10 @@ public class AudioStreamService extends Service {
                 : prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0.0f);
         this.volumeBoost = volumeBoost;
 
+        depthScaler = intent != null && intent.hasExtra(PrefKeys.EXTRA_DEPTH_SCALER)
+                ? intent.getFloatExtra(PrefKeys.EXTRA_DEPTH_SCALER, 1.0f)
+                : prefs.getFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f);
+
         boolean superEmphasis = intent != null && intent.hasExtra(PrefKeys.EXTRA_SUPER_EMPHASIS)
                 ? intent.getBooleanExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, false)
                 : prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false);
@@ -184,8 +223,27 @@ public class AudioStreamService extends Service {
             if (intent.hasExtra(PrefKeys.EXTRA_APP_VOLUME)) {
                 mapSliderToGains(appVolume);
             }
-            if (intent.hasExtra(PrefKeys.EXTRA_NOISE_FILTER) && noiseSuppressor != null) {
-                noiseSuppressor.setEnabled(noiseFilterEnabled);
+            if (intent.hasExtra(PrefKeys.EXTRA_NOISE_FILTER)) {
+                if (!noiseFilterEnabled && noiseSuppressor != null) {
+                    noiseSuppressor.setEnabled(false);
+                    noiseSuppressor.release();
+                    noiseSuppressor = null;
+                } else if (noiseFilterEnabled && noiseSuppressor == null) {
+                    if (audioRecord != null && NoiseSuppressor.isAvailable()) {
+                        try {
+                            noiseSuppressor = NoiseSuppressor.create(audioRecord.getAudioSessionId());
+                            if (noiseSuppressor != null) {
+                                noiseSuppressor.setEnabled(true);
+                            } else {
+                                Log.w(TAG, "NoiseSuppressor の生成に失敗しました");
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "NoiseSuppressor の初期化中に例外", e);
+                        }
+                    } else {
+                        Log.w(TAG, "NoiseSuppressor を初期化できません（audioRecord未初期化）");
+                    }
+                }
             }
             if (intent.hasExtra(PrefKeys.EXTRA_OPTION_MIC)) {
                 prefs.edit().putBoolean(PrefKeys.PREF_MIC_TYPE, micType).apply();
@@ -209,7 +267,7 @@ public class AudioStreamService extends Service {
 
         // 音量を反映（Intentが空でも補完済み）
         setAppVolume(appVolume);
-
+        memoryHandler.post(memoryCheckRunnable);
         return START_STICKY;
     }
 
@@ -217,7 +275,7 @@ public class AudioStreamService extends Service {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("耳みみエイド")
                 .setContentText("作動中")
-                .setSmallIcon(R.drawable.notification_icon)
+                .setSmallIcon(R.drawable.rednotification_icon)
                 .setOngoing(true)
                 .build();
     }
@@ -233,7 +291,11 @@ public class AudioStreamService extends Service {
         }
     }
     private void startStreaming() {
-        if (isStreaming) return;
+        if (isStreaming){
+            Log.w(TAG, "startStreaming() が再入されました。処理をスキップします");
+            return;
+        }
+        isStreaming = true;
         // サンプルレート＆バッファを自動選択
         Pair<Integer, Integer> best = findBestSampleRate();
         final int sampleRate = best.first;
@@ -244,6 +306,8 @@ public class AudioStreamService extends Service {
         int micType = prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false)
                 ? MediaRecorder.AudioSource.CAMCORDER  // 外部マイク
                 : MediaRecorder.AudioSource.MIC;     // 内蔵マイク
+        if (noiseFilterEnabled){micType = MediaRecorder.AudioSource.VOICE_COMMUNICATION;}
+
         // それぞれの最小バッファを正しく取得（入力/出力で別々に計算）
         int recMin  = AudioRecord.getMinBufferSize(sampleRate, channelIn, audioFormat);
         int playMin = AudioTrack.getMinBufferSize(sampleRate, channelOut, audioFormat);
@@ -272,6 +336,8 @@ public class AudioStreamService extends Service {
         );
         if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
             Log.e(TAG, "AudioRecord の初期化に失敗");
+            audioRecord.release(); // 念のため解放
+            audioRecord = null;
             stopSelf();
             return;
         }
@@ -319,14 +385,18 @@ public class AudioStreamService extends Service {
         // 限界突破モードの初期化をスレッド外で一度だけ行う
         if (superEmphasis && emphasisEnabled) {
             applySuperEmphasisPreset(sampleRate);
+            highBandCutDepth = depthScaler * 0.995f; //音声強調ブースト時に遠くの音を削ってよければこの行は削除する
         } else {
             xManualGain = manualGain;
             boostGainMore = 6.0f;
-            bandCutDepth = 0.85;
+            bandCutDepth = 0.85;//bandCutDepth = depthScaler * 0.95;
+            //↑ 前後をパンするイメージにするなら「bandCutDepth = depthScaler * 0.95;」に変更可能
+            highBandCutDepth = depthScaler * 0.97;
             lowCutFreq = 800.0;
             highCutFreq = 3200.0;
             initBandPass(sampleRate);
             initBandCut(sampleRate, cutLowHz, cutHighHz);
+            initNotchFilter(sampleRate,notchLowHz,notchHighHz);
             initBoostRange(sampleRate, boostLowHz, boostHighHz);
         }
 
@@ -338,6 +408,11 @@ public class AudioStreamService extends Service {
             short[] buffer = pcmBuffer;
             while (isStreaming) {
                 int readCount = audioRecord.read(buffer, 0, buffer.length);
+                if (readCount < 0) {
+                    Log.e(TAG, "audioRecord.read() failed: " + readCount);
+                    continue;
+                }
+
                 Log.d(TAG, "readCount = " + readCount);
                 Log.d(TAG, "rawInput[0] = " + buffer[0]);
 
@@ -374,6 +449,9 @@ public class AudioStreamService extends Service {
                                 cut = boostRangeMono(cut);      // 帯域ブースト
                             }
                             cut = bandcutFilterMono(cut);
+                            if (emphasisEnabled) {
+                                cut = applyNotchFilterMono(cut);
+                            }
                             cut = highBandcutFilterMono(cut);
 
                             // ピーキー音の抑制（簡易リミッター）
@@ -399,6 +477,9 @@ public class AudioStreamService extends Service {
                                 cut = boostRangeMono(cut);      // 帯域ブースト
                             }
                             cut = bandcutFilterMono(cut);
+                            if (emphasisEnabled) {
+                                cut = applyNotchFilterMono(cut);
+                            }
                             cut = highBandcutFilterMono(cut);
 
                             // ピーキー音の抑制（簡易リミッター）
@@ -462,30 +543,39 @@ public class AudioStreamService extends Service {
 
                     // ステレオトラックへ書き込み（サンプル数は frames*2）
                     Log.d(TAG, "stereoOut[0] = " + stereoOut[0] + ", stereoOut[1] = " + stereoOut[1]);
-                    audioTrack.write(stereoOut, 0, frames * 2);
+                    try {
+                        audioTrack.write(stereoOut, 0, frames * 2);
+                    }catch (IllegalStateException e){
+                        Log.e(TAG, "audioTrack.write() failed", e);
+                    }
                 }
             }
             // スレッドループ終了後にリソース解放
-            audioRecord.stop();
-            audioRecord.release();
+            if(audioRecord != null){
+                audioRecord.stop();
+                audioRecord.release();
+            }
             audioTrack.stop();
             audioTrack.release();
         }, "AudioStreamThread");
         streamThread.start();
+        isStreaming = true;
+        prefs.edit().putBoolean("isStreaming", true).apply();
     }
 
     @Override
     public void onDestroy() {
         // ストリーミング停止リクエスト
         isStreaming = false;
-        super.onDestroy();
-
+        memoryHandler.removeCallbacks(memoryCheckRunnable);
+        releaseAudioResources();
         // NoiseSuppressor の解放
         if (noiseSuppressor != null) {
             noiseSuppressor.setEnabled(false);
             noiseSuppressor.release();
             noiseSuppressor = null;
         }
+        super.onDestroy();
     }
 
     @Override
@@ -601,6 +691,28 @@ public class AudioStreamService extends Service {
         highCutHpPrevOut = 0.0;
         highCutLpPrevOut = 0.0;
     }
+    private void initNotchFilter(double sampleRate, double lowHz, double highHz) {
+        double dt = 1.0 / sampleRate;
+        double rcLow = 1.0 / (2 * Math.PI * highHz);
+        double rcHigh = 1.0 / (2 * Math.PI * lowHz);
+
+        notchLpAlpha = dt / (dt + rcLow);
+        notchHpAlpha = rcHigh / (dt + rcHigh);
+
+        notchHpPrevIn = 0.0;
+        notchHpPrevOut = 0.0;
+        notchLpPrevOut = 0.0;
+    }
+    private double applyNotchFilterMono(double sample) {
+        double hpOut = notchHpAlpha * (notchHpPrevOut + sample - notchHpPrevIn);
+        notchHpPrevIn = sample;
+        notchHpPrevOut = hpOut;
+
+        double lpOut = notchLpPrevOut + notchLpAlpha * (hpOut - notchLpPrevOut);
+        notchLpPrevOut = lpOut;
+
+        return sample - notchDepth * lpOut;
+    }
 
     // 低音域を減衰して返す
     private double bandcutFilterMono(double sample) {
@@ -687,6 +799,91 @@ public class AudioStreamService extends Service {
         Log.d("AudioStreamService",
               String.format("Slider=%.2f AppVol=%.2f BoostGain=%.2f", vol, appVolume, boostGain));
     }
+    //メモリが圧迫されてクラッシュするのを防ぐためにネイティブのコード類を開放（手動ガベージのイメージ）
+
+    private void releaseAudioResources() {
+        isStreaming = false;
+
+        if (streamThread != null) {
+            try {
+                streamThread.join(); // スレッド終了を待つ
+            } catch (InterruptedException e) {
+                Log.e(TAG, "streamThread.join() 中に割り込み", e);
+            }
+            streamThread = null;
+        }
+
+        if (audioRecord != null) {
+            try {
+                if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
+                    audioRecord.stop();
+                }
+            } catch (IllegalStateException e) {
+                Log.w(TAG, "audioRecord.stop() に失敗: " + e.getMessage());
+            }
+            audioRecord.release();
+            audioRecord = null;
+        }
+
+        if (audioTrack != null) {
+            try {
+                audioTrack.stop();
+            } catch (IllegalStateException e) {
+                Log.w(TAG, "audioTrack.stop() に失敗: " + e.getMessage());
+            }
+            audioTrack.release();
+            audioTrack = null;
+        }
+
+        if (noiseSuppressor != null) {
+            try {
+                noiseSuppressor.setEnabled(false);
+                noiseSuppressor.release();
+            } catch (IllegalStateException e) {
+                Log.w(TAG, "noiseSuppressor の解放に失敗: " + e.getMessage());
+            }
+            noiseSuppressor = null;
+            noiseFilterEnabled = false;
+        }
+        prefs.edit().putBoolean("isStreaming", false).apply();
+    }
+
+
+    private void handleMemoryPressure() {
+        isStreaming = false;
+        if (streamThread != null) {
+            try {
+                streamThread.join(); // スレッド終了を待つ
+            } catch (InterruptedException e) {
+                Log.e(TAG, "スレッド停止中に割り込み", e);
+            }
+        }
+        releaseAudioResources(); // 音声リソース解放
+        startStreaming();        // 再初期化して復旧
+    }
+
+    private void showMemoryNotification() {
+        String timestamp = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault())
+                .format(new Date());
+        String message = "メモリ圧迫のため、音声処理を一時停止しました。\n（検知時刻：" + timestamp + "）";
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+             .setSmallIcon(R.drawable.notification_icon)
+             .setContentTitle("音声の安定制御のために音声処理を一時停止しました")
+             .setContentText("安全に利用できるように状態を回復しました")
+             .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
+             .setPriority(NotificationCompat.PRIORITY_HIGH)
+             .setAutoCancel(true);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED) {
+            notificationManager.notify(1001, builder.build());
+        } else {
+            Log.w(TAG, "通知権限が未許可のため、メモリ通知をスキップしました");
+        }
+    }
+
     //superEmphasisの挙動に関するメソッド
     private void applySuperEmphasisPreset(int sampleRate) {
 
@@ -694,8 +891,8 @@ public class AudioStreamService extends Service {
         boostGainMore     = 10.0f;
 
         cutLowHz          = 15.0;//bandCutする帯域の下限
-        cutHighHz         = 425.0;//bandCutする帯域の上限
-        bandCutDepth      = 0.98f;//bandCutの深さ
+        cutHighHz         = 650.0;//bandCutする帯域の上限
+        bandCutDepth      = 0.99f;//bandCutの深さ
 
         lowCutFreq         = 150.0;//bandPassする帯域指定の下側
         highCutFreq        = 900.0;//bandPassする帯域指定の上側
@@ -707,12 +904,13 @@ public class AudioStreamService extends Service {
         boostLowHz         = 1000.0;//音声強調を行う帯域（下側）
         boostHighHz        = 2800.0;//音声強調を行う帯域（上側）
 
-        threshold          = 0.045f;//閾値より小さい音はノイズとしてカット
+        threshold          = 0.035f;//閾値より小さい音はノイズとしてカット
         //2800～4000Hz帯域は現時点では生音のまま
         //lpPrevOutputの値を調整したカットも検討してもいいかも。
 
         //　↓　フィルタの初期化
         initBandCut(sampleRate, cutLowHz, cutHighHz);
+        initNotchFilter(sampleRate,notchLowHz,notchHighHz);
         initBandPass(sampleRate);
         initBoostRange(sampleRate, boostLowHz, boostHighHz);
         initHighBandCut(sampleRate, highCutLowHz, highCutHighHz);

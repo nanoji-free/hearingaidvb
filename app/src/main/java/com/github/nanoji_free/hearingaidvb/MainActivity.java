@@ -1,29 +1,34 @@
 package com.github.nanoji_free.hearingaidvb;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
-import com.github.nanoji_free.hearingaidvb.PrefKeys;
-import com.github.nanoji_free.hearingaidvb.SettingsUtils;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
-        public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
             private SharedPreferences prefs;
+            private ConstraintLayout rootLayout;
             private float savedBalance;// 現在はService通知用。将来的にUI表示にも使う可能性あり
 
             // SharedPreferences 用フィールド
@@ -38,6 +43,8 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
             private Switch noiseFilterSwitch;
             private Switch emphasisSwitch;
             private Button button_settings;
+            private Button button_easysettings;
+            private ImageView centerImage;
 
             // 録音・再生状態ほか
             private boolean isStreaming = false;
@@ -51,6 +58,10 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
                 super.onCreate(savedInstanceState);
                 setContentView(R.layout.activity_main);
 
+                rootLayout = findViewById(R.id.rootLayout);
+                if (rootLayout != null) {
+                    DispHelper.applySavedBackground(this, rootLayout);
+                }
                 toggleButton = findViewById(R.id.toggleButton);
                 statusText = findViewById(R.id.statusText);
                 volumeSeekBar = findViewById(R.id.volumeSeekBar);
@@ -58,10 +69,28 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
                 tvVolumeValue = findViewById(R.id.tvVolumeValue);
                 noiseFilterSwitch = findViewById(R.id.noiseFilterSwitch);
                 emphasisSwitch   = findViewById(R.id.emphasisSwitch);
+                centerImage = findViewById(R.id.centerImage);
 
                 prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
                 savedBalance = prefs.getFloat(PrefKeys.PREF_BALANCE, DEFAULT_BALANCE);
-
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(this,
+                                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                                1001);
+                    }
+                    NotificationChannel channel = new NotificationChannel(
+                        "channel_id",
+                        "静かな語りかけ",
+                        NotificationManager.IMPORTANCE_DEFAULT
+                    );
+                    channel.setDescription("音声処理の状態をそっとお知らせします");
+                    NotificationManager manager = getSystemService(NotificationManager.class);
+                    if (manager != null) {
+                        manager.createNotificationChannel(channel);
+                    }
+                }
 
                 //アプリ起動時にもサービスへ初期バランスを通知
                 if (isStreaming) {
@@ -73,7 +102,7 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
                 isStreaming = prefs.getBoolean("isStreaming", false);
                 updateUi();
 
-                // （任意）前回ONだったら自動的に開始したい場合
+                // 前回ONだったら自動的に開始
                 if (isStreaming) {
                     checkPermissionAndStart();
                 }
@@ -103,20 +132,16 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
         */
                 // UI更新メソッドで一括反映
                 updateUiFromPrefs();
-
                 updateUi();
 
                 // トグルボタン：開始／停止
                 toggleButton.setOnClickListener(v -> {
+                    boolean isStreaming = prefs.getBoolean(PrefKeys.PREF_IS_STREAMING, false);
                     if (!isStreaming) {
                         checkPermissionAndStart();
                     } else {
                         stopStreaming();
                     }
-                    // 状態を保存
-                    prefs.edit()
-                            .putBoolean("isStreaming", isStreaming)
-                            .apply();
                 });
 
                 // 音量 SeekBar
@@ -151,7 +176,6 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
                 });
 
         //「全体の設定を戻す」ボタン（MainActivity側）
-
         presetButtonMA.setOnClickListener(v -> {
 
             // SharedPreferencesを初期化
@@ -161,10 +185,14 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
 
             if (isStreaming) {
                 // サービスを一度停止して再起動することでマイク設定を反映
-                stopService(new Intent(MainActivity.this, AudioStreamService.class));
-
-                ContextCompat.startForegroundService(this, buildStreamingIntent(true));
-            }
+                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    stopService(new Intent(MainActivity.this, AudioStreamService.class));
+                    ContextCompat.startForegroundService(this, buildStreamingIntent(true));
+                } else {
+                    checkPermissionAndStart(); // 権限がない場合は再要求
+                }
+           }
         });
 
         // ノイズフィルター Switch
@@ -175,7 +203,8 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
                      .apply();
             // Service にノイズ抑制の ON/OFF を通知
             if (isStreaming) {
-                startService(buildStreamingIntent(false));
+                stopService(new Intent(MainActivity.this, AudioStreamService.class));
+                ContextCompat.startForegroundService(this, buildStreamingIntent(true));
             }
         });
 
@@ -197,15 +226,22 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
             }
         });
 
-        //遷移ボタン
+        //遷移ボタン（詳細設定）
         button_settings = findViewById(R.id.button_settings);
         button_settings.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(intent);
         });
-    }
 
-    private void checkPermissionAndStart() {
+        //遷移ボタン（かんたん設定）
+        button_easysettings = findViewById(R.id.button_easysettings);
+        button_easysettings.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, EasysettingsActivity.class);
+            startActivity(intent);
+        });
+            }
+
+        private void checkPermissionAndStart() {
         // （ここに startStreaming を呼ぶロジックを入れる）
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -239,7 +275,19 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
             } else {
                 showSettingsOrGuideDialog();
             }
-        }
+        }else if (requestCode == 1001) { // 通知権限のリクエストコードを仮設20251027　↓
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 通知が許可された場合の処理（通知表示）
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "channel_id")
+                .setSmallIcon(R.drawable.rednotification_icon)
+                .setContentTitle("通知の準備が整いました")
+                .setContentText("音声処理の状態を通知でお知らせします")
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setAutoCancel(true);
+            } else {
+                // 通知が拒否された場合の処理（例：案内やToastなど）
+            }
+        }//　←　ここまでを仮設
     }
 
     private void showRationaleDialog() {
@@ -277,6 +325,12 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (rootLayout == null) {
+            rootLayout = findViewById(R.id.rootLayout);
+        }
+
+        DispHelper.applySavedBackground(this, rootLayout);
         updateUiFromPrefs(); // ← prefsからUIを再描画
 
         if (isStreaming) {
@@ -287,7 +341,7 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        //AudioStreamServiceの停止
         boolean isStreaming = prefs.getBoolean("isStreaming", false);
         if (!isStreaming) {
             stopService(new Intent(this, AudioStreamService.class));
@@ -307,7 +361,13 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
         isStreaming = false;
         prefs.edit().putBoolean("isStreaming", false).apply();
         updateUi();
-    }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.w(TAG, "マイク権限がないため、startStreaming を中止します");
+            return;
+            }
+        }
 
     private void updateUi() {
         if (statusText != null) {
@@ -327,15 +387,42 @@ import com.github.nanoji_free.hearingaidvb.SettingsUtils;
     }
     private void updateUiFromPrefs() {
         float savedVolume = prefs.getFloat(PrefKeys.PREF_VOLUME, DEFAULT_VOLUME_FLOAT);
-        volumeSeekBar.setProgress((int)(savedVolume * 100));
-        tvVolumeValue.setText(String.format("音量調整: %.2f×", savedVolume));
-        noiseFilterSwitch.setChecked(prefs.getBoolean(PrefKeys.PREF_NOISE_FILTER, false));
+        if(volumeSeekBar != null){
+            volumeSeekBar.setProgress((int)(savedVolume * 100));
+        }
+        if(tvVolumeValue != null){
+            tvVolumeValue.setText(String.format("音量調整: %.2f×", savedVolume));
+        }
+        if(noiseFilterSwitch != null){
+            noiseFilterSwitch.setChecked(prefs.getBoolean(PrefKeys.PREF_NOISE_FILTER, false));
+        }
         if (emphasisSwitch != null) {
             emphasisSwitch.setChecked(prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false));
         }
+        int selectedId = prefs.getInt(PrefKeys.PREF_CENTER_SELECTION, R.id.chrRecommended);
+        if (centerImage != null) {
+            if (selectedId == R.id.chrNone) {
+                centerImage.setVisibility(View.GONE);
+            } else {
+                centerImage.setVisibility(View.VISIBLE);
+                if (selectedId == R.id.chrRecommended) {
+                    centerImage.setImageResource(R.drawable.betaimage);
+                } else if (selectedId == R.id.chrChoiced) {
+                    String uriString = prefs.getString(PrefKeys.PREF_CENTER_IMAGE_URI, null);
+                    if (uriString != null && !uriString.contains("com.google.android.apps.photos")) {
+                        try {
+                            centerImage.setImageURI(Uri.parse(uriString));
+                        } catch (Exception e) {
+                            ImageRecoveryHelper.tryRecoverAndDisplay(this, uriString, centerImage, prefs);
+                        }
+                    } else {
+                        centerImage.setImageResource(R.drawable.betaimage);
+                    }
+                }
+            }
+        }
     }
-
-     private Intent buildStreamingIntent(boolean requestStreaming) {
+    private Intent buildStreamingIntent(boolean requestStreaming) {
         return new Intent(this, AudioStreamService.class)
              .putExtra(PrefKeys.EXTRA_APP_VOLUME, prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f))
              .putExtra(PrefKeys.EXTRA_BALANCE, prefs.getFloat(PrefKeys.PREF_BALANCE, 0f))

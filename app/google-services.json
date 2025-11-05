@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "463305980057",
+    "project_id": "hearingaidvb",
+    "storage_bucket": "hearingaidvb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:463305980057:android:850a028b077d84a7a12008",
+        "android_client_info": {
+          "package_name": "com.github.nanoji_free.hearingaidvb"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlky1etlnAvA7d1Jlw-hmAB2ep4hm80T4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
