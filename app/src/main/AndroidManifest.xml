@@ -29,8 +29,30 @@
             android:name=".DisplaySettingsActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
+        <activity
+            android:name=".infoActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
+        <activity
+            android:name=".SplashActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat" />
 
 
+        <!-- 修正確認後に削除予定20251108
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -40,11 +62,15 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- サービス登録 -->
+        </activity>
+        -->
+
+        <!-- サービス登録 -->
         <service
             android:name=".AudioStreamService"
             android:foregroundServiceType="microphone|mediaProjection"
             tools:ignore="Instantiatable" />
+
     </application>
 
 </manifest>

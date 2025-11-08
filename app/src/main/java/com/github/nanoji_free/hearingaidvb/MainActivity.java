@@ -1,11 +1,13 @@
 package com.github.nanoji_free.hearingaidvb;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
             private Switch emphasisSwitch;
             private Button button_settings;
             private Button button_easysettings;
+            private Button button_toInfoButton;
             private ImageView centerImage;
 
             // 録音・再生状態ほか
@@ -52,10 +55,18 @@ public class MainActivity extends AppCompatActivity {
             private static final float  DEFAULT_VOLUME_FLOAT = 0.65f;
             private static final float    DEFAULT_BALANCE = 0f;  // SeekBar progress の中央
 
+            @SuppressLint("MissingInflatedId")
             @Override
             protected void onCreate(Bundle savedInstanceState) {
                 // View のバインド
                 super.onCreate(savedInstanceState);
+
+                boolean isSafeMode = getIntent().getBooleanExtra("SAFE_MODE", false);
+
+                prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+
+                prefs.edit().putBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, isSafeMode).apply();
+
                 setContentView(R.layout.activity_main);
 
                 rootLayout = findViewById(R.id.rootLayout);
@@ -71,7 +82,12 @@ public class MainActivity extends AppCompatActivity {
                 emphasisSwitch   = findViewById(R.id.emphasisSwitch);
                 centerImage = findViewById(R.id.centerImage);
 
-                prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+                if (isSafeMode) {
+                    centerImage.setVisibility(View.GONE);
+                } else {
+                    applyCenterImage();
+                }
+
                 savedBalance = prefs.getFloat(PrefKeys.PREF_BALANCE, DEFAULT_BALANCE);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
@@ -83,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                     NotificationChannel channel = new NotificationChannel(
                         "channel_id",
                         "静かな語りかけ",
-                        NotificationManager.IMPORTANCE_DEFAULT
+                        NotificationManager.IMPORTANCE_HIGH
                     );
                     channel.setDescription("音声処理の状態をそっとお知らせします");
                     NotificationManager manager = getSystemService(NotificationManager.class);
@@ -175,84 +191,92 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-        //「全体の設定を戻す」ボタン（MainActivity側）
-        presetButtonMA.setOnClickListener(v -> {
+                //「全体の設定を戻す」ボタン（MainActivity側）
+                presetButtonMA.setOnClickListener(v -> {
 
-            // SharedPreferencesを初期化
-            SettingsUtils.resetDefaults(this);
-            //UIを再描画
-            updateUiFromPrefs();
+                // SharedPreferencesを初期化
+                SettingsUtils.resetDefaults(this);
+                //UIを再描画
+                updateUiFromPrefs();
 
-            if (isStreaming) {
+                if (isStreaming) {
                 // サービスを一度停止して再起動することでマイク設定を反映
-                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                        == PackageManager.PERMISSION_GRANTED) {
-                    stopService(new Intent(MainActivity.this, AudioStreamService.class));
-                    ContextCompat.startForegroundService(this, buildStreamingIntent(true));
-                } else {
-                    checkPermissionAndStart(); // 権限がない場合は再要求
+                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                            == PackageManager.PERMISSION_GRANTED) {
+                        stopService(new Intent(MainActivity.this, AudioStreamService.class));
+                        ContextCompat.startForegroundService(this, buildStreamingIntent(true));
+                    } else {
+                        checkPermissionAndStart(); // 権限がない場合は再要求
+                    }
                 }
-           }
-        });
+                });
 
-        // ノイズフィルター Switch
-        noiseFilterSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
-            //設定を保存
-            prefs.edit()
+                // ノイズフィルター Switch
+                noiseFilterSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
+                //設定を保存
+                    prefs.edit()
                      .putBoolean(PrefKeys.PREF_NOISE_FILTER, isChecked)
                      .apply();
-            // Service にノイズ抑制の ON/OFF を通知
-            if (isStreaming) {
-                stopService(new Intent(MainActivity.this, AudioStreamService.class));
-                ContextCompat.startForegroundService(this, buildStreamingIntent(true));
-            }
-        });
+                // Service にノイズ抑制の ON/OFF を通知
+                    if (isStreaming) {
+                        stopService(new Intent(MainActivity.this, AudioStreamService.class));
+                        ContextCompat.startForegroundService(this, buildStreamingIntent(true));
+                    }
+                });
 
-        // 音声強調 Switch
-        emphasisSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
-            prefs.edit()
-                    .putBoolean(PrefKeys.PREF_EMPHASIS, isChecked)
-                    .apply();
+                // 音声強調 Switch
+                emphasisSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
+                    prefs.edit()
+                        .putBoolean(PrefKeys.PREF_EMPHASIS, isChecked)
+                        .apply();
 
-            // 音声強調がOFFになったら限界突破もOFFにする
-            if (!isChecked) {
-                prefs.edit()
-                    .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false)
-                    .apply();
-            }
+                    // 音声強調がOFFになったら限界突破もOFFにする
+                    if (!isChecked) {
+                     prefs.edit()
+                        .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false)
+                        .apply();
+                    }
 
-            if (isStreaming) {
-                startService(buildStreamingIntent(false));
-            }
-        });
+                    if (isStreaming) {
+                        startService(buildStreamingIntent(false));
+                    }
+                });
 
-        //遷移ボタン（詳細設定）
-        button_settings = findViewById(R.id.button_settings);
-        button_settings.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-            startActivity(intent);
-        });
+                //遷移ボタン（infoボタン）
+                button_toInfoButton = findViewById(R.id.toInfoButton);
+                button_toInfoButton.setOnClickListener(v -> {
+                    Intent intent = new Intent(MainActivity.this, infoActivity.class);
+                    startActivity(intent);
+                });
 
-        //遷移ボタン（かんたん設定）
-        button_easysettings = findViewById(R.id.button_easysettings);
-        button_easysettings.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, EasysettingsActivity.class);
-            startActivity(intent);
-        });
+                //遷移ボタン（詳細設定）
+                button_settings = findViewById(R.id.button_settings);
+                button_settings.setOnClickListener(v -> {
+                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                    startActivity(intent);
+                });
+
+                //遷移ボタン（かんたん設定）
+                button_easysettings = findViewById(R.id.button_easysettings);
+                button_easysettings.setOnClickListener(v -> {
+                    Intent intent = new Intent(MainActivity.this, EasysettingsActivity.class);
+                    startActivity(intent);
+                });
             }
 
         private void checkPermissionAndStart() {
+            boolean isSafeMode = prefs.getBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, false);
         // （ここに startStreaming を呼ぶロジックを入れる）
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    REQUEST_AUDIO_PERMISSION
-            );
-        } else {
-            startStreaming();
-        }
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        REQUEST_AUDIO_PERMISSION
+                );
+            } else {
+                startStreaming();
+            }
     }
 
     @Override
@@ -321,17 +345,24 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .show();
     }
-
     @Override
     protected void onResume() {
         super.onResume();
+
+        boolean isSafeMode = prefs.getBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, false);
+        if (isSafeMode) {
+            centerImage.setVisibility(View.GONE);
+        } else {
+            centerImage.setVisibility(View.VISIBLE);
+            applyCenterImage();
+        }
 
         if (rootLayout == null) {
             rootLayout = findViewById(R.id.rootLayout);
         }
 
         DispHelper.applySavedBackground(this, rootLayout);
-        updateUiFromPrefs(); // ← prefsからUIを再描画
+        updateUiFromPrefs(); // prefsからUIを再描画
 
         if (isStreaming) {
             startService(buildStreamingIntent(false));
@@ -368,8 +399,39 @@ public class MainActivity extends AppCompatActivity {
             return;
             }
         }
+    private void applyCenterImage() {
+        int selectedId = prefs.getInt(PrefKeys.PREF_CENTER_SELECTION, R.id.chrRecommended);
+        if (centerImage == null) return;
+
+        if (selectedId == R.id.chrNone) {
+            centerImage.setVisibility(View.GONE);
+        } else {
+            centerImage.setVisibility(View.VISIBLE);
+            if (selectedId == R.id.chrRecommended) {
+                centerImage.setImageResource(R.drawable.betaimage);
+            } else if (selectedId == R.id.chrChoiced) {
+                String uriString = prefs.getString(PrefKeys.PREF_CENTER_IMAGE_URI, null);
+                if (uriString != null && !uriString.contains("com.google.android.apps.photos")) {
+                    try {
+                        Bitmap bitmap = DispHelper.loadOptimizedBitmap(this, Uri.parse(uriString), 160, 160);
+                        if (bitmap != null) {
+                            centerImage.setImageBitmap(bitmap);
+                        } else {
+                            centerImage.setImageResource(R.drawable.betaimage);
+                        }
+                    } catch (Exception e) {
+                        ImageRecoveryHelper.tryRecoverAndDisplay(this, uriString, centerImage, prefs);
+                    }
+                } else {
+                    centerImage.setImageResource(R.drawable.betaimage);
+                }
+            }
+        }
+    }
+
 
     private void updateUi() {
+        boolean isSafeMode = prefs.getBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, false);
         if (statusText != null) {
             statusText.setText(isStreaming ? "作動中" : "動作停止中");
         }
@@ -400,27 +462,7 @@ public class MainActivity extends AppCompatActivity {
             emphasisSwitch.setChecked(prefs.getBoolean(PrefKeys.PREF_EMPHASIS, false));
         }
         int selectedId = prefs.getInt(PrefKeys.PREF_CENTER_SELECTION, R.id.chrRecommended);
-        if (centerImage != null) {
-            if (selectedId == R.id.chrNone) {
-                centerImage.setVisibility(View.GONE);
-            } else {
-                centerImage.setVisibility(View.VISIBLE);
-                if (selectedId == R.id.chrRecommended) {
-                    centerImage.setImageResource(R.drawable.betaimage);
-                } else if (selectedId == R.id.chrChoiced) {
-                    String uriString = prefs.getString(PrefKeys.PREF_CENTER_IMAGE_URI, null);
-                    if (uriString != null && !uriString.contains("com.google.android.apps.photos")) {
-                        try {
-                            centerImage.setImageURI(Uri.parse(uriString));
-                        } catch (Exception e) {
-                            ImageRecoveryHelper.tryRecoverAndDisplay(this, uriString, centerImage, prefs);
-                        }
-                    } else {
-                        centerImage.setImageResource(R.drawable.betaimage);
-                    }
-                }
-            }
-        }
+
     }
     private Intent buildStreamingIntent(boolean requestStreaming) {
         return new Intent(this, AudioStreamService.class)

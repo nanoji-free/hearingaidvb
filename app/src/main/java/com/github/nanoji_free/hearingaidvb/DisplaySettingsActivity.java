@@ -3,6 +3,7 @@ package com.github.nanoji_free.hearingaidvb;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -70,6 +71,12 @@ public class DisplaySettingsActivity extends AppCompatActivity {
                                     .remove(PrefKeys.PREF_CENTER_IMAGE_URI)
                                     .putString(PrefKeys.PREF_CENTER_IMAGE_URI, safeUri.toString())
                                     .apply();
+                            Bitmap bitmap = DispHelper.loadOptimizedBitmap(this, safeUri, 160, 160);
+                            if (bitmap != null) {
+                                centerImageView.setImageBitmap(bitmap);
+                            } else {
+                                centerImageView.setImageResource(R.drawable.betaimage);
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -149,7 +156,12 @@ public class DisplaySettingsActivity extends AppCompatActivity {
                 String uriString = prefs.getString(PrefKeys.PREF_CENTER_IMAGE_URI, null);
                 if (uriString != null && !uriString.contains("com.google.android.apps.photos")) {
                     try {
-                        centerImageView.setImageURI(Uri.parse(uriString));
+                         Bitmap bitmap = DispHelper.loadOptimizedBitmap(this, Uri.parse(uriString), 160, 160);
+                        if (bitmap != null) {
+                            centerImageView.setImageBitmap(bitmap);
+                        } else {
+                            centerImageView.setImageResource(R.drawable.betaimage);
+                        }
                     } catch (Exception e) {
                         ImageRecoveryHelper.tryRecoverAndDisplay(this, uriString, centerImageView, prefs);
                     }
@@ -159,6 +171,4 @@ public class DisplaySettingsActivity extends AppCompatActivity {
             }
         }
     }
-
 }
-

@@ -1,11 +1,8 @@
 package com.github.nanoji_free.hearingaidvb;
 
 // TODO: BillingLibruaryの関連コードの実装
-// TODO: MainActivityの下側の吹き出しに関する対応（アプデアリなどの表示）
-// TODO: EasySettingsActivityの設計と実装（簡単設定、卓上モード・テレビ視聴モード・屋外モード、ユーザープリセット３つ）
 // TODO: 本番用JSONの準備、現状のテスト用のコードからの更新
 // TODO: GooglePlayConsoleの準備
-// TODO: キャラクター変更をするための仕組みの検討と実装
 
 import android.Manifest;
 import androidx.appcompat.app.AlertDialog;
@@ -48,9 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
     private Button balPresetButton;
     private Button presetButton;
     private Button toChangeViewButton;
-    private Button addButton;
-    private Button infoButton;
-    private Button noticeButton;
+    private Switch safeModeSwitch;
     private Button returnButton;
 
     @SuppressLint("MissingInflatedId")
@@ -72,10 +67,10 @@ public class SettingsActivity extends AppCompatActivity {
         isStreaming = prefs.getBoolean("isStreaming", false);
 
         //アプリ起動時にもサービスへ初期バランスを通知(作動中のときのみバランスを通知）
-        if (isStreaming) {
-            startService(new Intent(this, AudioStreamService.class)
-                    .putExtra(PrefKeys.EXTRA_BALANCE, savedBalance));
-        }
+        //if (isStreaming) {
+        //    startService(new Intent(this, AudioStreamService.class)
+        //            .putExtra(PrefKeys.EXTRA_BALANCE, savedBalance));
+        //}　　//20251105遷移時にサービスが動作してしまう誤動作の防止のためコメントアウト
 
         //「オプションマイク　on/off」スイッチ
         optionMic = findViewById(R.id.optionMic);
@@ -257,77 +252,40 @@ public class SettingsActivity extends AppCompatActivity {
         //「画面設定へ」遷移ボタン
         toChangeViewButton = findViewById(R.id.toChangeViewButton);
         toChangeViewButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, DisplaySettingsActivity.class);
-            startActivity(intent);
-        });
-
-        //「お知らせ」ボタン
-        addButton = findViewById(R.id.addButton);
-        addButton.setOnClickListener(v -> {
-            //ここに、お知らせボタンの内容を実装する（作業中）
-            Intent intent = new Intent(SettingsActivity.this, NoticeActivity.class);
-            startActivity(intent);
-        });
-
-        // 「使い方ガイド」ボタン
-        infoButton = findViewById(R.id.infoButton);
-        infoButton.setOnClickListener(v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            LayoutInflater inflater = getLayoutInflater();
-
-            // 作成したレイアウトを取得
-            View dialogView = inflater.inflate(R.layout.custom_dialog, null);
-
-            // TextView に内容を設定
-            TextView guideMessage = dialogView.findViewById(R.id.guide_message);
-            guideMessage.setText(
-                    "音声が再生できない場合はスマホの設定を確認してください。\n\n" +
-                            "設定＞アプリ＞耳みみエイド＞許可＞マイクの権限を許可する。\n\n" +
-                            "音量の調整はアプリの音量以外に本体の音量やイヤホンの音量もご確認ください。\n\n"
-            );
-
-            // ダイアログにレイアウトを設定
-            builder.setTitle("使い方ガイド")
-                    .setView(dialogView)
-                    .setPositiveButton("OK", null)
+            new AlertDialog.Builder(SettingsActivity.this)
+                    .setTitle("画像設定に進みます")
+                    .setMessage("この操作により音声処理が一時停止されます。\nよろしいですか？")
+                    .setPositiveButton("はい", (dialog, which) -> {
+                        // サービス停止
+                        stopService(new Intent(SettingsActivity.this, AudioStreamService.class));
+                        // 運転状況の更新
+                        prefs.edit().putBoolean(PrefKeys.PREF_IS_STREAMING, false).apply();
+                        // 遷移
+                        Intent intent = new Intent(SettingsActivity.this, DisplaySettingsActivity.class);
+                        startActivity(intent);
+                    })
+                    .setNegativeButton("いいえ", null)
                     .show();
         });
 
-        // 「このアプリについて」ボタン
-        noticeButton = findViewById(R.id.noticeButton);
-        noticeButton.setOnClickListener(v -> {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            LayoutInflater inflater = getLayoutInflater();
+        //「safeModeSwitch」スイッチ
+        safeModeSwitch = findViewById(R.id.safeModeSwitch);
+        boolean isSafeMode = prefs.getBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, false);
+        safeModeSwitch.setChecked(isSafeMode);
+        updateSafeModeUi(isSafeMode); // UI制御（toChangeViewButtonなど）
 
-            // 作成したレイアウトを取得
-            View dialogView = inflater.inflate(R.layout.custom_dialog, null);
+        safeModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, isChecked).apply();
 
-            // TextView に内容を設定
-            TextView guideMessage = dialogView.findViewById(R.id.guide_message);
-            guideMessage.setText(
-                    "\n"+
-                            "「聞こえるって、すばらしい！」\n\n" +
-                            "このアプリはスマホの周囲の音をリアルタイムで集音し再生する聴覚支援ツールです。\n" +
-                            "特に骨伝導ワイヤレスイヤホンと組み合わせによる聴覚支援補助を目指しています。\n\n" +
-                            "集音ツールとしてテーブルの上やテレビの近くにスマートフォンを置いてご活用ください。\n" +
-                            "(ワイヤレスイヤホンを使用すると、音声を転送する関係上、音声の遅延が発生することがあります。)\n\n"+
-                            "ポケットにスマートフォンを入れて使用する場合などは、アプリの詳細画面から外部マイクを使用しない設定に切り替えるか、ノイズ除去スイッチをオンにした状態で使用することをお勧めします。\n"+
-                            "また、その際は音声の遅延防止の観点などから有線のイヤホンをご利用をおすすめします。\n\n"+
-                            "屋外で使用するシチュエーションなど様々な状況に対する対応を目的に「外部マイクの使用」「左右スピーカーのバランス調整」「音声強調の強化」「音量の増強」などの機能を設けています。必要に応じた調整をしてご利用ください。\n\n"+
-                            "ノイズ除去機能を搭載したスマホでは、その機能を利用することもできるようにしています。必要に応じてご活用ください。\n\n"+
-                            "イヤホンからの音漏れや振動の漏れが原因でハウリングする場合があります。\n"+
-                            "スマホとイヤホンの距離や、音量の調整をすることで改善する場合があります。\n\n"+
-                            "スマホのメモリが不足した場合、自動的に状況を改善する機能を設けています。その機能が働いた場合には１～２秒程度音声が停止し、ノイズ除去機能が停止することがあります。その場合には必要に応じてノイズ除去スイッチを再度オンにしてご利用ください\n\n"+
-                            "画面に表示する画像を選択することができますが、端末のメモリの状況によっては画像がリアルタイムで変更されない場合があります。その場合は一度アプリを終了し、改めて再開してください。\n\n\n"+
-                            "本アプリに起因する損害は、その一切を当方では負いかねますのでご了承の上、本アプリをご利用下さい。\n\n"
-            );
+            // UI制御を即時反映
+            updateSafeModeUi(isChecked);
 
-            // ダイアログにレイアウトを設定
-            builder.setTitle("このアプリについて")
-                    .setView(dialogView)
-                    .setPositiveButton("OK", null)
-                    .show();
+            // トースト通知で語りを補足
+            Toast.makeText(this,
+                    isChecked ? "セーフモードを有効にしました（安定性優先）" : "セーフモードを解除しました（通常モード）",
+                    Toast.LENGTH_SHORT).show();
         });
+
         //「戻る」ボタン
         returnButton = findViewById(R.id.returnButton);
         returnButton.setOnClickListener(v -> {
@@ -370,9 +328,23 @@ public class SettingsActivity extends AppCompatActivity {
         } else {
             depthScaler = 1.0f;
         }
-            startService(buildStreamingIntent(false));
-    }
 
+        boolean isSafeMode = prefs.getBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, false);
+        if (safeModeSwitch != null) {
+            safeModeSwitch.setChecked(isSafeMode);
+        }
+        updateSafeModeUi(isSafeMode);
+
+    }
+    private void updateSafeModeUi(boolean isSafeMode) {
+        if (toChangeViewButton != null) {
+            toChangeViewButton.setEnabled(!isSafeMode);
+            toChangeViewButton.setAlpha(isSafeMode ? 0.5f : 1.0f);
+            toChangeViewButton.setText(isSafeMode
+                    ? "セーフモード中は画像の変更はできません"
+                    : "画面構成を変更する");
+        }
+    }
     private Intent buildStreamingIntent(boolean requestStreaming) {
         return new Intent(SettingsActivity.this, AudioStreamService.class)
                 .putExtra(PrefKeys.EXTRA_APP_VOLUME, prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f))
@@ -386,12 +358,6 @@ public class SettingsActivity extends AppCompatActivity {
                 .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, requestStreaming);
     }
 }
-
-
-
-
-
-
 
 
 

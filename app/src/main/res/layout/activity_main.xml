@@ -95,6 +95,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <Button
+        android:id="@+id/toInfoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="各種のお知らせ など"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@+id/centerImage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
     <!--この下のテスト用のボタンは不要20251105
     <Button
         android:id="@+id/crash_button"

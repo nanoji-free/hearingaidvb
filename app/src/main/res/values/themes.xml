@@ -1,9 +1,28 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- アプリ全体のベーステーマ -->
     <style name="Base.Theme.HearingAidVb" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
     <style name="Theme.HearingAidVb" parent="Base.Theme.HearingAidVb" />
+
+    <!-- スプラッシュ専用テーマ -->
+    <style name="Theme.Splash" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/sumple_splash</item> <!-- ←仮設画像を背景に -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
 </resources>
+
+
+    <!--（問題がなければ以下は削除を予定20251108）
+    <resources xmlns:tools="http://schemas.android.com/tools">
+        <!- Base application theme. ->
+        <style name="Base.Theme.HearingAidVb" parent="Theme.Material3.DayNight.NoActionBar">
+            <!- Customize your light theme here. ->
+            <!- <item name="colorPrimary">@color/my_light_primary</item> ->
+        </style>
+
+        <style name="Theme.HearingAidVb" parent="Base.Theme.HearingAidVb" />
+    </resources>
+    -->

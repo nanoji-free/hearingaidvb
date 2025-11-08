@@ -123,28 +123,25 @@
         app:layout_constraintTop_toBottomOf="@+id/presetButton"
         />
 
-    <Button
-        android:id="@+id/addButton"
-        android:layout_width="match_parent"
+
+    <TextView
+        android:id="@+id/safeMode"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="お知らせ"
-        app:layout_constraintBottom_toTopOf="@+id/infoButton"
+        android:text="safe mode"
+        android:textSize="18dp"
+        app:layout_constraintBottom_toTopOf="@id/returnButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="16dp"
         />
-    <Button
-        android:id="@+id/infoButton"
+    <Switch
+        android:id="@+id/safeModeSwitch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="使い方ガイド（マイクの権限について）"
-        app:layout_constraintBottom_toTopOf="@+id/noticeButton"
-        />
-    <Button
-        android:id="@+id/noticeButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="このアプリについて"
-        app:layout_constraintBottom_toTopOf="@+id/returnButton"
+        app:layout_constraintBottom_toTopOf="@id/returnButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         />
 
     <Button

@@ -1,6 +1,7 @@
 package com.github.nanoji_free.hearingaidvb;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -34,6 +35,7 @@ import java.util.Locale;
 public class AudioStreamService extends Service {
     private static final String TAG = "AudioStreamService";
     private static final String CHANNEL_ID = "channel_id";
+    private static final String MEMORY_CHANNEL_ID = "memory_channel_id";
 
     // SharedPreferences 用フィールド
     private SharedPreferences prefs;
@@ -49,18 +51,22 @@ public class AudioStreamService extends Service {
     private Runnable memoryCheckRunnable = new Runnable() {
         @Override
         public void run() {
-            long used = Debug.getNativeHeapAllocatedSize();
-            long max = Runtime.getRuntime().maxMemory();
-            float usageRatio = (float) used / max;
-            if (used > max * 0.8) {
-                Log.w(TAG, "メモリ圧迫検知 → 音声処理を一時停止");
+            ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+            if (activityManager != null) {
+                ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+                activityManager.getMemoryInfo(memoryInfo);
+
+                long availMem = memoryInfo.availMem; // 利用可能メモリ（バイト）
+                if (availMem < 128 * 1024 * 1024) { // 128MB未満なら圧迫と判定
+
+                    Log.w(TAG, "メモリ圧迫検知 → 音声処理を一時停止");
                 handleMemoryPressure();
-                //ダイアログでユーザーに一時停止した理由を明示する。★★★
-                //停止した日時を取得しダイアログのメッセージ用のテキストデータを作成
-                //ダイアログ表示、ただし表示はアクティビティ側で行う必要があるので検討別途！
+                //ユーザーに一時停止した理由を明示する。★★★
+                //停止した日時を取得しダイアログのメッセージ用のテキストデータを作成し表示
                 showMemoryNotification(); // 通知表示を追加
+                }
+            memoryHandler.postDelayed(this, 300_000); // 10秒ごとにチェックから5分毎に変更
             }
-            memoryHandler.postDelayed(this, 10000); // 10秒ごとにチェック
         }
     };
 
@@ -164,6 +170,7 @@ public class AudioStreamService extends Service {
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
+        createMemoryNotificationChannel();
         // SharedPreferences を取得し、保存値をロード
         prefs = getSharedPreferences(PrefKeys.PREFS_NAME, Context.MODE_PRIVATE);
         appVolume         = prefs.getFloat(PrefKeys.PREF_VOLUME, appVolume);
@@ -273,9 +280,10 @@ public class AudioStreamService extends Service {
 
     private Notification buildNotification() {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("耳みみエイド")
-                .setContentText("作動中")
-                .setSmallIcon(R.drawable.rednotification_icon)
+                .setContentTitle("")
+                .setContentText("")
+                .setSmallIcon(R.drawable.notification_icon)
+                .setPriority(NotificationCompat.PRIORITY_MIN)
                 .setOngoing(true)
                 .build();
     }
@@ -283,13 +291,28 @@ public class AudioStreamService extends Service {
         NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID,
                 "Audio Streaming Channel",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_MIN
         );
+        channel.setShowBadge(false);
         NotificationManager nm = getSystemService(NotificationManager.class);
         if (nm != null) {
             nm.createNotificationChannel(channel);
         }
     }
+    private void createMemoryNotificationChannel() {
+        NotificationChannel channel = new NotificationChannel(
+                MEMORY_CHANNEL_ID,
+                "メモリ通知",
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        channel.setDescription("メモリ圧迫時に通知します");
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (manager != null) {
+            manager.createNotificationChannel(channel);
+        }
+    }
+
+
     private void startStreaming() {
         if (isStreaming){
             Log.w(TAG, "startStreaming() が再入されました。処理をスキップします");
@@ -865,13 +888,18 @@ public class AudioStreamService extends Service {
     private void showMemoryNotification() {
         String timestamp = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss", Locale.getDefault())
                 .format(new Date());
-        String message = "メモリ圧迫のため、音声処理を一時停止しました。\n（検知時刻：" + timestamp + "）";
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+        NotificationCompat.InboxStyle style = new NotificationCompat.InboxStyle()
+                .addLine("メモリ使用量が高くなったため、音声処理を一時的に停止しました")
+                .addLine("現在は自動的に復旧しています")
+                .addLine("検知時刻：" + timestamp)
+                .addLine("（このメッセージはスワイプで消せます）");
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, MEMORY_CHANNEL_ID)
              .setSmallIcon(R.drawable.notification_icon)
-             .setContentTitle("音声の安定制御のために音声処理を一時停止しました")
-             .setContentText("安全に利用できるように状態を回復しました")
-             .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
+             .setContentTitle("音声処理を一時停止しました")
+             .setContentText("状況が回復しました")
+             .setStyle(style)
              .setPriority(NotificationCompat.PRIORITY_HIGH)
              .setAutoCancel(true);
 

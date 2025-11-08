@@ -1,5 +1,4 @@
 package com.github.nanoji_free.hearingaidvb;
-//TODO:アプデがあればその表示をする機能をこのアクティビティに実装予定
 
 import android.app.AlertDialog;
 import android.content.Intent;

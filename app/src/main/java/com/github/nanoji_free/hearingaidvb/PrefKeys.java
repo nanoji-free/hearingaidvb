@@ -14,10 +14,10 @@ public class PrefKeys {
     public static final String PREF_BACKGROUND_SELECTION = "pref_background_selection";
     public static final String PREF_CENTER_IMAGE_URI = "pref_center_image_uri";
     public static final String PREF_CENTER_SELECTION = "pref_center_selection";
+    public static final String PREF_SAFE_MODE_ENABLED = "safe_mode_enabled";
+
     public static final String PREF_CURRENT_VERSION_CODE = "currentVersionCode";//削除を検討中20251024、バ-ジョンコードの動的対応が不要なら削除
-
     public static final String PREF_INITIALIZED  = "pref_initialized";  // 初回起動フラグ//利用の可否が保留中
-
 
     public static final String EXTRA_APP_VOLUME = "extra_app_volume";
     public static final String EXTRA_BALANCE = "extra_balance";
