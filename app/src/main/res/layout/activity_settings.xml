@@ -70,6 +70,26 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="22dp"
         />
+    <TextView
+        android:id="@+id/hearingProfileLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="聴力プロファイル補正"
+        android:textSize="18dp"
+        android:layout_marginTop="42dp"
+        app:layout_constraintTop_toBottomOf="@id/volBoost"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Switch
+        android:id="@+id/hearingProfileSwitch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/hearingProfileLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
     <SeekBar
         android:id="@+id/volumeBoostSeekBar"
         android:layout_width="match_parent"
@@ -85,7 +105,7 @@
         android:layout_height="wrap_content"
         android:text="出力調整（左右バランス）"
         android:textSize="18dp"
-        app:layout_constraintTop_toBottomOf="@id/volBoost"
+        app:layout_constraintTop_toBottomOf="@id/hearingProfileLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="48dp"
@@ -104,7 +124,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="左右バランスを初期設定に戻す"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="30dp"
         app:layout_constraintTop_toBottomOf="@+id/stValue"
         />
     <Button
@@ -121,6 +141,13 @@
         android:layout_height="wrap_content"
         android:text="画面設定へ"
         app:layout_constraintTop_toBottomOf="@+id/presetButton"
+        />
+    <Button
+        android:id="@+id/toChangeHearingButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="聞こえ方の設定を行う"
+        app:layout_constraintTop_toBottomOf="@+id/toChangeViewButton"
         />
 
 

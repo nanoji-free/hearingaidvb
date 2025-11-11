@@ -15,6 +15,8 @@ public class PrefKeys {
     public static final String PREF_CENTER_IMAGE_URI = "pref_center_image_uri";
     public static final String PREF_CENTER_SELECTION = "pref_center_selection";
     public static final String PREF_SAFE_MODE_ENABLED = "safe_mode_enabled";
+    public static final String PREF_HEARING_PROFILE_CORRECTION = "pref_hearing_profile_correction";
+
 
     public static final String PREF_CURRENT_VERSION_CODE = "currentVersionCode";//削除を検討中20251024、バ-ジョンコードの動的対応が不要なら削除
     public static final String PREF_INITIALIZED  = "pref_initialized";  // 初回起動フラグ//利用の可否が保留中
@@ -50,5 +52,12 @@ public class PrefKeys {
     public static final String PRESET2_MIC_TYPE         = "preset2_mic";
     public static final String PRESET2_VOLUME_BOOST     = "preset2_boost";
     public static final String PRESET2_DEPTH_SCALER     = "preset2_depth";
+
+    //増幅設定用のバンドごとのパラメータ
+    public static final String CORRECTION_250 = "correction_250";
+    public static final String CORRECTION_500 = "correction_500";
+    public static final String CORRECTION_1000 = "correction_1000";
+    public static final String CORRECTION_2000 = "correction_2000";
+    public static final String CORRECTION_4000 = "correction_4000";
 
 }

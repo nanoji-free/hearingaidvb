@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+    <ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/fittingTitle"
+            android:text="【聞こえの調整】"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginBottom="16dp" />
+        <TextView
+            android:id="@+id/fittingModeTitle"
+            android:text="調整方法を選んでください"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/startFullFittingButton"
+            android:text="全体を調整する"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/startPartialFittingButton"
+            android:text="特定の帯域だけ調整する"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:id="@+id/fittingInstruction"
+            android:text="250Hzの音を流します。聞こえるところまでスライダーを動かしてください"
+            android:textSize="16sp"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/playToneButton"
+            android:text="音を流す"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
+
+        <SeekBar
+            android:id="@+id/fittingSlider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="30"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/currentValue"
+            android:text="補正値: 0dB"
+            android:textSize="14sp"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_marginBottom="16dp" />
+
+        <Button
+            android:id="@+id/confirmBandButton"
+            android:text="この帯域はこれでOK\n\n※ 聞こえないときはスライダーの\n一番右の位置を指定して下さい"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp" />
+
+        <TextView
+            android:id="@+id/progressIndicator"
+            android:text="1 / 5 帯域"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:textSize="14sp"
+            />
+        <Button
+            android:id="@+id/fittingReturnButton"
+            android:text="戻る"
+            android:layout_width="128dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
+</ScrollView>

@@ -41,10 +41,12 @@ public class SettingsActivity extends AppCompatActivity {
     private Switch superEnphasSwitch;
     private TextView volBoostText;
     private SeekBar volumeBoostSeekBar;
+    private Switch hearingProfileSwitch;
     private SeekBar stSeekBar;
     private Button balPresetButton;
     private Button presetButton;
     private Button toChangeViewButton;
+    private Button toChangeHearingButton;
     private Switch safeModeSwitch;
     private Button returnButton;
 
@@ -109,6 +111,16 @@ public class SettingsActivity extends AppCompatActivity {
             if (isStreaming) {
                 startService(buildStreamingIntent(false));
             }
+        });
+
+        //「聴力プロファイル補正」スイッチ
+        hearingProfileSwitch = findViewById(R.id.hearingProfileSwitch);
+        hearingProfileSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
+            prefs.edit()
+                    .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, isChecked)
+                    .apply();
+            //サービスに通知する必要があるので追記する。20251111、内容が実装されていないので検討別途
+
         });
 
         //音量増幅シークバーのテキスト
@@ -266,6 +278,12 @@ public class SettingsActivity extends AppCompatActivity {
                     })
                     .setNegativeButton("いいえ", null)
                     .show();
+        });
+        //「聞こえ方の設定へ」遷移ボタン　toChangeHearingButton
+        toChangeHearingButton = findViewById(R.id.toChangeHearingButton);
+        toChangeHearingButton.setOnClickListener(v -> {
+            Intent intent = new Intent(SettingsActivity.this, HearingProfileActivity.class);
+            startActivity(intent);
         });
 
         //「safeModeSwitch」スイッチ

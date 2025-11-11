@@ -798,32 +798,17 @@ public class AudioStreamService extends Service {
         return rem == 0 ? bytes : (bytes + (frameSizeBytes - rem));
     }
 
-    //スライダー値(0.0〜1.0)から appVolume と boostGain を同時に設定
+    //スライダー値(0.0〜1.0)から appVolume を設定（設定を出力ゲインとのハイブリッド式から修正）
     private void mapSliderToGains(float vol) {
-        // appVolume の設定（上限あり）
-        if (vol > MAX_APP_VOLUME) {
-            appVolume = MAX_APP_VOLUME;
-        } else {
-            appVolume = vol;
-        }
-
-        // boostGain の設定（BOOST_START_VOL を超えたら可変）
-        if (vol > BOOST_START_VOL) {
-            boostGain = (((vol - 0.2f) * 10f) / 2f) + BOOST_BASE;
-            if (boostGain > MAX_BOOST_GAIN) {
-                boostGain = MAX_BOOST_GAIN;
-            }
-        } else {
-            boostGain = BOOST_BASE;
-        }
+        appVolume = vol * MAX_APP_VOLUME;
 
         setAppVolume(appVolume);
         // boostGain は DSP 側で直接参照される想定
         Log.d("AudioStreamService",
               String.format("Slider=%.2f AppVol=%.2f BoostGain=%.2f", vol, appVolume, boostGain));
     }
-    //メモリが圧迫されてクラッシュするのを防ぐためにネイティブのコード類を開放（手動ガベージのイメージ）
 
+    //メモリが圧迫されてクラッシュするのを防ぐためにネイティブのコード類を開放（手動ガベージのイメージ）
     private void releaseAudioResources() {
         isStreaming = false;
 
