@@ -77,6 +77,14 @@
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@+id/secondEasySetButton"
         />
+    <Button
+        android:id="@+id/noiseEasySetButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="騒音モード"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/thirdEasySetButton"
+        />
     <TextView
         android:id="@+id/scineMemoryTitle"
         android:layout_width="match_parent"
@@ -84,7 +92,7 @@
         android:text="ユーザー設定"
         android:layout_marginTop="18dp"
         android:textSize="20dp"
-        app:layout_constraintTop_toBottomOf="@+id/thirdEasySetButton"
+        app:layout_constraintTop_toBottomOf="@+id/noiseEasySetButton"
         app:layout_constraintStart_toStartOf="parent"
         />
 

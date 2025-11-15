@@ -1,5 +1,6 @@
 package com.github.nanoji_free.hearingaidvb;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -33,8 +34,9 @@ public class EasysettingsActivity extends AppCompatActivity {
     private Button callSCtwoButton;
     private Button recSCtwoButton;
     private Button EasySettingsReturnButton;
+    private Button noiseEasySetButton;
 
-
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,6 +109,24 @@ public class EasysettingsActivity extends AppCompatActivity {
             }
             Toast.makeText(this, "「お出かけモード」に切り替えました。\n\n有線式のマイクの利用をお勧めします。", Toast.LENGTH_SHORT).show();
         });
+
+        //　騒音モードボタン
+        noiseEasySetButton = findViewById(R.id.noiseEasySetButton);
+        noiseEasySetButton.setOnClickListener(v -> {
+            prefs.edit()
+                    .putBoolean(PrefKeys.PREF_NOISE_FILTER, true)        // ノイズ除去ON
+                    .putBoolean(PrefKeys.PREF_EMPHASIS, true)            // 音声強調ON
+                    .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, true)      // 強調ブーストON
+                    .apply();
+
+            if (isStreaming) {
+                stopService(new Intent(this, AudioStreamService.class));
+                startService(new Intent(this, AudioStreamService.class)
+                        .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
+            }
+            Toast.makeText(this, "「騒音モード」に切り替えました。\n\n有線式のマイクの利用をお勧めします。", Toast.LENGTH_SHORT).show();
+        });
+
 
         // preset1を呼びだすボタン
         callSConeButton = findViewById(R.id.callSConeButton);

@@ -43,92 +43,102 @@ public class HearingProfileActivity extends AppCompatActivity {
         slider250.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float gain = progress / 10.0f; // 0〜30 → 0.0〜3.0倍
+                value250.setText(String.format("%.1f", gain));
+                prefs.edit().putFloat(PrefKeys.CORRECTION_250, gain).apply();
 
+                // AudioStreamService に補正値を送信
+                Intent intent = new Intent(HearingProfileActivity.this, AudioStreamService.class);
+                intent.putExtra(PrefKeys.EXTRA_CORRECTION_250, gain);
+                intent.putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true);
+                intent.putExtra(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true); // ON状態を明示
+                startService(intent);
             }
-
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
+            public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         //スライダー500の挙動
         slider500.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                float gain = progress / 10.0f; // 0〜30 → 0.0〜3.0倍
+                value500.setText(String.format("%.1f", gain));
+                prefs.edit().putFloat(PrefKeys.CORRECTION_500, gain).apply();
+                // AudioStreamService に補正値を送信
+                Intent intent = new Intent(HearingProfileActivity.this, AudioStreamService.class);
+                intent.putExtra(PrefKeys.EXTRA_CORRECTION_500, gain);
+                intent.putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true);
+                intent.putExtra(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true); // ON状態を明示
+                startService(intent);
             }
-
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
+            public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         //スライダー1000の挙動
         slider1000.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                float gain = progress / 10.0f; // 0〜30 → 0.0〜3.0倍
+                value1000.setText(String.format("%.1f", gain));
+                prefs.edit().putFloat(PrefKeys.CORRECTION_1000, gain).apply();
+                // AudioStreamService に補正値を送信
+                Intent intent = new Intent(HearingProfileActivity.this, AudioStreamService.class);
+                intent.putExtra(PrefKeys.EXTRA_CORRECTION_1000, gain);
+                intent.putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true);
+                intent.putExtra(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true); // ON状態を明示
+                startService(intent);
             }
-
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
+            public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         //スライダー2000の挙動
         slider2000.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                float gain = progress / 10.0f; // 0〜30 → 0.0〜3.0倍
+                value2000.setText(String.format("%.1f", gain));
+                prefs.edit().putFloat(PrefKeys.CORRECTION_2000, gain).apply();
+                // AudioStreamService に補正値を送信
+                Intent intent = new Intent(HearingProfileActivity.this, AudioStreamService.class);
+                intent.putExtra(PrefKeys.EXTRA_CORRECTION_2000, gain);
+                intent.putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true);
+                intent.putExtra(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true); // ON状態を明示
+                startService(intent);
             }
-
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
+            public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
 
         //スライダー4000の挙動
         slider4000.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                float gain = progress / 10.0f; // 0〜30 → 0.0〜3.0倍
+                value4000.setText(String.format("%.1f", gain));
+                prefs.edit().putFloat(PrefKeys.CORRECTION_4000, gain).apply();
+                // AudioStreamService に補正値を送信
+                Intent intent = new Intent(HearingProfileActivity.this, AudioStreamService.class);
+                intent.putExtra(PrefKeys.EXTRA_CORRECTION_4000, gain);
+                intent.putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true);
+                intent.putExtra(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true); // ON状態を明示
+                startService(intent);
             }
-
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
+            public void onStartTrackingTouch(SeekBar seekBar) {}
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
-
 
         //「フィッテング画面」に遷移するボタン
         toFittingButton = findViewById(R.id.toFittingButton);
@@ -159,5 +169,25 @@ public class HearingProfileActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        float gain250 = prefs.getFloat(PrefKeys.CORRECTION_250, 1.0f);
+        slider250.setProgress((int)(gain250 * 10));
+        value250.setText(String.format("%.1f", gain250));
+
+        float gain500 = prefs.getFloat(PrefKeys.CORRECTION_500, 1.0f);
+        slider500.setProgress((int)(gain500 * 10));
+        value500.setText(String.format("%.1f", gain500));
+
+        float gain1000 = prefs.getFloat(PrefKeys.CORRECTION_1000, 1.0f);
+        slider1000.setProgress((int)(gain1000 * 10));
+        value1000.setText(String.format("%.1f", gain1000));
+
+        float gain2000 = prefs.getFloat(PrefKeys.CORRECTION_2000, 1.0f);
+        slider2000.setProgress((int)(gain2000 * 10));
+        value2000.setText(String.format("%.1f", gain2000));
+
+        float gain4000 = prefs.getFloat(PrefKeys.CORRECTION_4000, 1.0f);
+        slider4000.setProgress((int)(gain4000 * 10));
+        value4000.setText(String.format("%.1f", gain4000));
     }
 }

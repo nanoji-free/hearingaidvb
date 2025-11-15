@@ -30,12 +30,30 @@ import androidx.core.app.NotificationManagerCompat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 public class AudioStreamService extends Service {
     private static final String TAG = "AudioStreamService";
     private static final String CHANNEL_ID = "channel_id";
     private static final String MEMORY_CHANNEL_ID = "memory_channel_id";
+
+    // 帯域補正用の状態クラス
+    private static class BandBoostState {
+        double hpAlpha, lpAlpha;
+        double hpPrevIn, hpPrevOut, lpPrevOut;
+        float gain;
+
+        BandBoostState() {
+            hpAlpha = lpAlpha = 0.0;
+            hpPrevIn = hpPrevOut = lpPrevOut = 0.0;
+            gain = 1.0f;
+        }
+    }
+
+    // 補正帯域の状態を保持（5バンド）
+    //private BandBoostState[] bandBoosts = new BandBoostState[5];
+    private final AtomicReference<BandBoostState[]> bandBoosts = new AtomicReference<>();
 
     // SharedPreferences 用フィールド
     private SharedPreferences prefs;
@@ -44,8 +62,11 @@ public class AudioStreamService extends Service {
     //public static final String EXTRA_EMPHASIS      = "EXTRA_EMPHASIS";
     //public static final String EXTRA_BALANCE = "extra_balance";
     public static final String EXTRA_VOLUME = "extra_volume";
+    private boolean hearingProfileEnabled = false;
     private AudioRecord audioRecord;
     private AudioTrack audioTrack;
+    private Intent lastIntent;
+
     // メモリ監視用
     private Handler memoryHandler = new Handler();
     private Runnable memoryCheckRunnable = new Runnable() {
@@ -87,6 +108,8 @@ public class AudioStreamService extends Service {
     private double lowCutFreq  = 800.0;   // 下限周波数(Hz)
     private double highCutFreq = 3200.0;   // 上限周波数(Hz)
     private float threshold = 0.015f;  //小さな音は雑音として外すための閾値、初期値は0.02f// （これ以下は切る）
+    private float thresholdB = 0.999f;  //大きな音も雑音として外すための閾値// （これ以上を切る）
+
     // IIRフィルタ状態
     private double hpAlpha, lpAlpha;
     private double hpPrevInput, hpPrevOutput, lpPrevOutput;
@@ -96,7 +119,7 @@ public class AudioStreamService extends Service {
     private double cutLpAlpha = 0.0;       // 1次LPF用の係数（MONO用）
     private double cutHpPrevIn,  cutHpPrevOut,  cutLpPrevOut;// MONO用の状態
     private double cutLowHz  = 15.0;
-    private double cutHighHz = 220.0;
+    private double cutHighHz = 250.0;
     private volatile double bandCutDepth = 0.90; // 0.0=無効, 1.0=最大カット,初期は0.8で仮設
 
     // --- 高域減衰用（例: 7.5kHz～Nyquist）---
@@ -126,7 +149,7 @@ public class AudioStreamService extends Service {
     private float depthScaler = 1.0f;
 
     // ===== 音量＆ブーストマッピング用の定数 =====
-    private static final float MAX_APP_VOLUME = 0.5f;   // 全体音量の上限
+    private static final float MAX_APP_VOLUME = 0.85f;   // 全体音量の上限
     private static final float BOOST_START_VOL = 0.25f; // ブーストが効き始める位置
     private static final float BOOST_BASE = 4.0f;       // ブーストの基準値
     private static final float MAX_BOOST_GAIN = 15.0f;   // ブーストの安全上限
@@ -164,7 +187,7 @@ public class AudioStreamService extends Service {
         return new Pair<>(16000, fb > 0 ? fb : 4096);
     }
 
-    private float appVolume = 0.5f;  // 0.0f～1.0f //ホワイトノイズ対策で上限を0.5で反映
+    private float appVolume = 0.65f;  // 0.0f～1.0f //ホワイトノイズ対策で上限を0.5で反映
     private float balance    = 0f;
     @Override
     public void onCreate() {
@@ -182,6 +205,7 @@ public class AudioStreamService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        this.lastIntent = intent;
         startForeground(1, buildNotification());
 
         SharedPreferences prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
@@ -221,6 +245,33 @@ public class AudioStreamService extends Service {
                 ? intent.getBooleanExtra(PrefKeys.EXTRA_SUPER_EMPHASIS, false)
                 : prefs.getBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false);
         this.superEmphasis = superEmphasis;
+
+        // 聴力プロファイル補正の取得
+        boolean hearingProfileEnabled = intent != null && intent.hasExtra(PrefKeys.PREF_HEARING_PROFILE_CORRECTION)
+                ? intent.getBooleanExtra(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false)
+                : prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false);
+        this.hearingProfileEnabled = hearingProfileEnabled;
+
+        float correction250 = prefs.getFloat(PrefKeys.CORRECTION_250, 1.0f);
+        float correction500 = prefs.getFloat(PrefKeys.CORRECTION_500, 1.0f);
+        float correction1000 = prefs.getFloat(PrefKeys.CORRECTION_1000, 1.0f);
+        float correction2000 = prefs.getFloat(PrefKeys.CORRECTION_2000, 1.0f);
+        float correction4000 = prefs.getFloat(PrefKeys.CORRECTION_4000, 1.0f);
+
+        /*
+        // 帯域ごとの補正初期化（BandBoostState方式）→　startStreaming()の中に移動
+        if (hearingProfileEnabled && audioRecord != null) {
+            int sampleRate = audioRecord.getSampleRate();
+            float[] gains = {
+                correction250,
+                correction500,
+                correction1000,
+                correction2000,
+                correction4000
+            };
+            initHearingProfileBoosts(sampleRate, gains);
+           }
+        */
 
         // Intentがあれば状態を更新（prefsにも反映）
         if (intent != null) {
@@ -268,7 +319,7 @@ public class AudioStreamService extends Service {
 
             boolean requestStreaming = intent.getBooleanExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
             if (requestStreaming && !isStreaming) {
-                startStreaming();
+                startStreaming(intent);
             }
         }
 
@@ -313,7 +364,10 @@ public class AudioStreamService extends Service {
     }
 
 
-    private void startStreaming() {
+    private void startStreaming(Intent intent) {
+        if (intent == null) {
+            intent = new Intent(); // 空のIntentで prefs fallback を有効にする
+        }
         if (isStreaming){
             Log.w(TAG, "startStreaming() が再入されました。処理をスキップします");
             return;
@@ -396,6 +450,31 @@ public class AudioStreamService extends Service {
         audioTrack.play();
         applyBalanceToTrack();//複数回呼び出している？デバッグ時などに確認のこと
         setBalance(balance);
+        if (hearingProfileEnabled) {
+            float[] gains = {
+                    //prefs.getFloat(PrefKeys.CORRECTION_250, 1.0f),
+                    //prefs.getFloat(PrefKeys.CORRECTION_500, 1.0f),
+                    //prefs.getFloat(PrefKeys.CORRECTION_1000, 1.0f),
+                    //prefs.getFloat(PrefKeys.CORRECTION_2000, 1.0f),
+                    //prefs.getFloat(PrefKeys.CORRECTION_4000, 1.0f)
+                    intent != null && intent.hasExtra(PrefKeys.EXTRA_CORRECTION_250)
+                            ? intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_250, 1.0f)
+                            : prefs.getFloat(PrefKeys.CORRECTION_250, 1.0f),
+                    intent != null && intent.hasExtra(PrefKeys.EXTRA_CORRECTION_500)
+                            ? intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_500, 1.0f)
+                            : prefs.getFloat(PrefKeys.CORRECTION_500, 1.0f),
+                    intent != null && intent.hasExtra(PrefKeys.EXTRA_CORRECTION_1000)
+                            ? intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_1000, 1.0f)
+                            : prefs.getFloat(PrefKeys.CORRECTION_1000, 1.0f),
+                    intent != null && intent.hasExtra(PrefKeys.EXTRA_CORRECTION_2000)
+                            ? intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_2000, 1.0f)
+                            : prefs.getFloat(PrefKeys.CORRECTION_2000, 1.0f),
+                    intent != null && intent.hasExtra(PrefKeys.EXTRA_CORRECTION_4000)
+                            ? intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_4000, 1.0f)
+                            : prefs.getFloat(PrefKeys.CORRECTION_4000, 1.0f)
+            };
+            initHearingProfileBoosts(sampleRate, gains);
+        }
 
         // 入力（ステレオ）と処理用（モノラル）のバッファを確保
         pcmBuffer = new short[bufferSizeInShorts];          // ステレオデータ用に確保（LRLR...）
@@ -468,8 +547,12 @@ public class AudioStreamService extends Service {
                         frames = readCount;
                         for (int f = 0; f < frames; f++) {
                             double cut = buffer[f];
-                            if (boostEnabled) {
-                                cut = boostRangeMono(cut);      // 帯域ブースト
+                            //if (boostEnabled) {                   //20251115コメントアウト
+                            //    cut = boostRangeMono(cut);      // 帯域ブースト
+                            //}
+                            // 聴力プロファイル補正（20251115追加）
+                            if (hearingProfileEnabled) {
+                                cut = applyHearingProfileBoost(cut);
                             }
                             cut = bandcutFilterMono(cut);
                             if (emphasisEnabled) {
@@ -496,8 +579,11 @@ public class AudioStreamService extends Service {
                             int m = (l + r) >> 1;
 
                             double cut = m;
-                            if (boostEnabled) {
-                                cut = boostRangeMono(cut);      // 帯域ブースト
+                            //if (boostEnabled) {                 //20251115コメントアウト
+                            //    cut = boostRangeMono(cut);      // 帯域ブースト
+                            //}
+                            if(hearingProfileEnabled){
+                                cut = applyHearingProfileBoost(cut);
                             }
                             cut = bandcutFilterMono(cut);
                             if (emphasisEnabled) {
@@ -660,6 +746,11 @@ public class AudioStreamService extends Service {
             if (Math.abs(x) < threshold) {
                 buffer[i] = 0;
                 continue;  // フィルタ処理をスキップ
+            }
+            // 大きすぎる音を除去（騒音ゲート）
+            if (Math.abs(x) > thresholdB * 32767f) {
+                buffer[i] = 0;
+                continue;
             }
             // HPF
             double hpOut = hpAlpha * (hpPrevOutput + x - hpPrevInput);
@@ -867,7 +958,7 @@ public class AudioStreamService extends Service {
             }
         }
         releaseAudioResources(); // 音声リソース解放
-        startStreaming();        // 再初期化して復旧
+        startStreaming(lastIntent); // 再初期化して復旧
     }
 
     private void showMemoryNotification() {
@@ -896,6 +987,51 @@ public class AudioStreamService extends Service {
             Log.w(TAG, "通知権限が未許可のため、メモリ通知をスキップしました");
         }
     }
+    private void initHearingProfileBoosts(double sampleRate, float[] gains) {
+        double[][] bands = {
+                {250.0, 500.0},
+                {500.0, 1000.0},
+                {1000.0, 2000.0},
+                {2000.0, 4000.0},
+                {4000.0, 8000.0}
+        };
+
+        BandBoostState[] boosts = new BandBoostState[bands.length];
+
+        for (int i = 0; i < bands.length; i++) {
+            double lowHz = bands[i][0];
+            double highHz = bands[i][1];
+            double dt = 1.0 / sampleRate;
+
+            BandBoostState b = new BandBoostState();
+            b.gain = gains[i];
+
+            // ローパスとハイパスのα係数を計算
+            double rcLow = 1.0 / (2 * Math.PI * highHz);
+            double rcHigh = 1.0 / (2 * Math.PI * lowHz);
+            b.lpAlpha = dt / (dt + rcLow);
+            b.hpAlpha = rcHigh / (dt + rcHigh);
+
+            boosts[i] = b;
+        }
+        bandBoosts.set(boosts); // 一括でスレッドセーフに更新
+    }
+    private double applyHearingProfileBoost(double sample) {
+        BandBoostState[] boosts = bandBoosts.get(); // スレッドセーフに取得
+        if (boosts == null) return sample;
+
+        for (BandBoostState b : boosts) {
+            double hpOut = b.hpAlpha * (b.hpPrevOut + sample - b.hpPrevIn);
+            b.hpPrevIn = sample;
+            b.hpPrevOut = hpOut;
+
+            double lpOut = b.lpPrevOut + b.lpAlpha * (hpOut - b.lpPrevOut);
+            b.lpPrevOut = lpOut;
+
+            sample += lpOut * (b.gain - 1.0);
+        }
+        return sample;
+    }
 
     //superEmphasisの挙動に関するメソッド
     private void applySuperEmphasisPreset(int sampleRate) {
@@ -904,11 +1040,11 @@ public class AudioStreamService extends Service {
         boostGainMore     = 10.0f;
 
         cutLowHz          = 15.0;//bandCutする帯域の下限
-        cutHighHz         = 650.0;//bandCutする帯域の上限
-        bandCutDepth      = 0.99f;//bandCutの深さ
+        cutHighHz         = 250.0;//bandCutする帯域の上限
+        bandCutDepth      = 0.999f;//bandCutの深さ
 
         lowCutFreq         = 150.0;//bandPassする帯域指定の下側
-        highCutFreq        = 900.0;//bandPassする帯域指定の上側
+        highCutFreq        = 3200.0;//bandPassする帯域指定の上側
 
         highCutLowHz       = 4000.0;
         highCutHighHz      = 20000.0;
@@ -918,6 +1054,7 @@ public class AudioStreamService extends Service {
         boostHighHz        = 2800.0;//音声強調を行う帯域（上側）
 
         threshold          = 0.035f;//閾値より小さい音はノイズとしてカット
+        thresholdB         = 0.925f;//閾値より大木値はノイズとしてカット
         //2800～4000Hz帯域は現時点では生音のまま
         //lpPrevOutputの値を調整したカットも検討してもいいかも。
 

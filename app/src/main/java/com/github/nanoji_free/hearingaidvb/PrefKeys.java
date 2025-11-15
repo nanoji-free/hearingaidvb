@@ -59,5 +59,11 @@ public class PrefKeys {
     public static final String CORRECTION_1000 = "correction_1000";
     public static final String CORRECTION_2000 = "correction_2000";
     public static final String CORRECTION_4000 = "correction_4000";
+    // 聴力補正値をサービスに渡すためのキー
+    public static final String EXTRA_CORRECTION_250 = "extra_correction_250";
+    public static final String EXTRA_CORRECTION_500 = "extra_correction_500";
+    public static final String EXTRA_CORRECTION_1000 = "extra_correction_1000";
+    public static final String EXTRA_CORRECTION_2000 = "extra_correction_2000";
+    public static final String EXTRA_CORRECTION_4000 = "extra_correction_4000";
 
 }
