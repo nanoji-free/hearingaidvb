@@ -46,9 +46,9 @@
 
             <SeekBar
                 android:id="@+id/slider_250"
-                android:layout_width="wrap_content"
+                android:layout_width="180dp"
                 android:layout_height="160dp"
-                android:max="30"
+                android:max="100"
                 android:rotation="270"
                 android:layout_marginBottom="4dp" />
 
@@ -56,7 +56,7 @@
                 android:id="@+id/value_250"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0dB"
+                android:text="0%"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -77,16 +77,16 @@
 
         <SeekBar
             android:id="@+id/slider_500"
-            android:layout_width="wrap_content"
+            android:layout_width="180dp"
             android:layout_height="160dp"
-            android:max="30"
+            android:max="100"
             android:rotation="270"
             android:layout_marginBottom="4dp" />
         <TextView
             android:id="@+id/value_500"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0dB"
+            android:text="0%"
             android:textSize="12sp" />
         </LinearLayout>
 
@@ -107,16 +107,16 @@
 
             <SeekBar
                 android:id="@+id/slider_1000"
-                android:layout_width="wrap_content"
+                android:layout_width="180dp"
                 android:layout_height="160dp"
-                android:max="30"
+                android:max="100"
                 android:rotation="270"
                 android:layout_marginBottom="4dp" />
             <TextView
                 android:id="@+id/value_1000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0dB"
+                android:text="0%"
                 android:textSize="12sp" />
         </LinearLayout>
         <!-- 2000Hz -->
@@ -136,16 +136,16 @@
 
             <SeekBar
                 android:id="@+id/slider_2000"
-                android:layout_width="wrap_content"
+                android:layout_width="180dp"
                 android:layout_height="160dp"
-                android:max="30"
+                android:max="100"
                 android:rotation="270"
                 android:layout_marginBottom="4dp" />
             <TextView
                 android:id="@+id/value_2000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0dB"
+                android:text="0%"
                 android:textSize="12sp" />
         </LinearLayout>
         <LinearLayout
@@ -164,16 +164,16 @@
 
             <SeekBar
                 android:id="@+id/slider_4000"
-                android:layout_width="wrap_content"
+                android:layout_width="180dp"
                 android:layout_height="160dp"
-                android:max="30"
+                android:max="100"
                 android:rotation="270"
                 android:layout_marginBottom="4dp" />
             <TextView
                 android:id="@+id/value_4000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0dB"
+                android:text="0%"
                 android:textSize="12sp" />
         </LinearLayout>
 

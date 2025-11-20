@@ -115,6 +115,8 @@ public class SettingsActivity extends AppCompatActivity {
 
         //「聴力プロファイル補正」スイッチ
         hearingProfileSwitch = findViewById(R.id.hearingProfileSwitch);
+        boolean isCorrectionEnabled = prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false);
+        hearingProfileSwitch.setChecked(isCorrectionEnabled);
         hearingProfileSwitch.setOnCheckedChangeListener((btn, isChecked) -> {
             prefs.edit()
                     .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, isChecked)
@@ -224,6 +226,7 @@ public class SettingsActivity extends AppCompatActivity {
                     .putFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f)
                     .putBoolean(PrefKeys.PREF_MIC_TYPE, false)
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false)
+                    .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false)
                     .apply();
             // volumeBoost の変数も初期化
             volumeBoost = 0f;
@@ -249,6 +252,9 @@ public class SettingsActivity extends AppCompatActivity {
                 if (volBoostText != null) {
                     volBoostText.setText("音量増量ブースター（" + Math.round(volumeBoost * 100) + "%）");
                 }
+            }
+            if (hearingProfileSwitch != null) {
+                hearingProfileSwitch.setChecked(false);
             }
             boolean isStreaming = prefs.getBoolean("isStreaming", false);
             if (isStreaming) {
@@ -351,6 +357,12 @@ public class SettingsActivity extends AppCompatActivity {
         if (safeModeSwitch != null) {
             safeModeSwitch.setChecked(isSafeMode);
         }
+        if (hearingProfileSwitch != null) {
+            hearingProfileSwitch.setChecked(prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false));
+        }
+
+
+
         updateSafeModeUi(isSafeMode);
 
     }

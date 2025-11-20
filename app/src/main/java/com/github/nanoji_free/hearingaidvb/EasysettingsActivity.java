@@ -64,6 +64,8 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_NOISE_FILTER, true)        // ノイズ除去ON
                     .putBoolean(PrefKeys.PREF_EMPHASIS, true)            // 音声強調ON
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, true)      // 強調ブーストON
+                    .putBoolean(PrefKeys.PREF_MIC_TYPE, false)           // 内部マイク（外部マイクOFF）
+                    .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true) // 補正ON
                     .apply();
             //サービスが動作中なら動作を止めて設定を読み込んで再起動する
             if (isStreaming) {
@@ -71,18 +73,22 @@ public class EasysettingsActivity extends AppCompatActivity {
                 startService(new Intent(this, AudioStreamService.class)
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
-            //トースト表示で戻切りかえを伝達する
-            Toast.makeText(this, "「卓上モード」に切り替えました。\n\nワイヤレス骨伝導マイクの利用をお勧めします。", Toast.LENGTH_SHORT).show();
+            //ダイアログ表示で戻切りかえを伝達する
+            new AlertDialog.Builder(this)
+                    .setMessage("「卓上モード」に切り替えました。\n\nワイヤレス骨伝導イヤホンの利用をお勧めします。")
+                    .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         //テレビ視聴モードのボタン
         secondEasySetButton = findViewById(R.id.secondEasySetButton);
         secondEasySetButton.setOnClickListener(v -> {
             prefs.edit()
-                    .putBoolean(PrefKeys.PREF_NOISE_FILTER, false)       // ノイズ除去OFF
-                    .putBoolean(PrefKeys.PREF_MIC_TYPE, false)           // 内部マイク（外部マイクOFF）
+                    .putBoolean(PrefKeys.PREF_NOISE_FILTER, false)        // ノイズ除去OFF
                     .putBoolean(PrefKeys.PREF_EMPHASIS, true)            // 音声強調ON
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, true)      // 強調ブーストON
+                    .putBoolean(PrefKeys.PREF_MIC_TYPE, false)           // 内部マイク（外部マイクOFF）
+                    .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true) // 補正ON
                     .apply();
 
             if (isStreaming) {
@@ -90,7 +96,10 @@ public class EasysettingsActivity extends AppCompatActivity {
                 startService(new Intent(this, AudioStreamService.class)
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
-            Toast.makeText(this, "「テレビ視聴モード」に切り替えました。\n\nワイヤレス骨伝導マイクの利用をお勧めします。", Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setMessage("「テレビ視聴モード」に切り替えました。\n\nワイヤレス骨伝導イヤホンの利用をお勧めします。")
+                    .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         // お出かけモードボタン
@@ -99,15 +108,21 @@ public class EasysettingsActivity extends AppCompatActivity {
             prefs.edit()
                     .putBoolean(PrefKeys.PREF_NOISE_FILTER, true)        // ノイズ除去ON
                     .putBoolean(PrefKeys.PREF_EMPHASIS, true)            // 音声強調ON
-                    .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, true)      // 強調ブーストON
+                    .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false)      // 強調ブーストOFF
+                    .putBoolean(PrefKeys.PREF_MIC_TYPE, true) // 外部マイクを明示
+                    .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true) // 補正ON
                     .apply();
+
 
             if (isStreaming) {
                 stopService(new Intent(this, AudioStreamService.class));
                 startService(new Intent(this, AudioStreamService.class)
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
-            Toast.makeText(this, "「お出かけモード」に切り替えました。\n\n有線式のマイクの利用をお勧めします。", Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setMessage("「お出かけモード」に切り替えました。\n\n有線イヤホンの利用をお勧めします。")
+                    .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         //　騒音モードボタン
@@ -117,6 +132,8 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_NOISE_FILTER, true)        // ノイズ除去ON
                     .putBoolean(PrefKeys.PREF_EMPHASIS, true)            // 音声強調ON
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, true)      // 強調ブーストON
+                    .putBoolean(PrefKeys.PREF_MIC_TYPE, true) // 外部マイクを明示
+                    .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true) // 補正ON
                     .apply();
 
             if (isStreaming) {
@@ -124,7 +141,10 @@ public class EasysettingsActivity extends AppCompatActivity {
                 startService(new Intent(this, AudioStreamService.class)
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
-            Toast.makeText(this, "「騒音モード」に切り替えました。\n\n有線式のマイクの利用をお勧めします。", Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setMessage("「騒音モード」に切り替えました。\n\n有線イヤホンの利用をお勧めします。")
+                    .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
 
@@ -132,7 +152,11 @@ public class EasysettingsActivity extends AppCompatActivity {
         callSConeButton = findViewById(R.id.callSConeButton);
         callSConeButton.setOnClickListener(v -> {
             if (!prefs.contains(PrefKeys.PRESET1_VOLUME)) {
-                Toast.makeText(this, "プリセット1がまだ記憶されていません。", Toast.LENGTH_SHORT).show();
+                new AlertDialog.Builder(this)
+                        .setTitle("注意")
+                        .setMessage("プリセット1がまだ記憶されていません。")
+                        .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
+                        .show();
                 return;
             }
 
@@ -145,6 +169,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_MIC_TYPE, prefs.getBoolean(PrefKeys.PRESET1_MIC_TYPE, false))
                     .putFloat(PrefKeys.PREF_VOLUME_BOOST, prefs.getFloat(PrefKeys.PRESET1_VOLUME_BOOST, 0f))
                     .putFloat(PrefKeys.PREF_DEPTH_SCALER, prefs.getFloat(PrefKeys.PRESET1_DEPTH_SCALER, 1.0f))
+                    .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, prefs.getBoolean(PrefKeys.PRESET1_HEARING_PROFILE_ENABLED, false)) // 補正機能ON/OFF
                     .apply();
 
             if (isStreaming) {
@@ -152,8 +177,10 @@ public class EasysettingsActivity extends AppCompatActivity {
                 startService(new Intent(this, AudioStreamService.class)
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
-
-            Toast.makeText(this, "プリセット1を呼び出しました。\n語りの芯を復元しました。", Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setMessage("プリセット1を呼び出しました。\n状態を復元しました。")
+                    .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         //　１のプリセットの記憶をするrecSConeButton
@@ -172,9 +199,10 @@ public class EasysettingsActivity extends AppCompatActivity {
                                 .putBoolean(PrefKeys.PRESET1_MIC_TYPE, prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false))        // マイク種別
                                 .putFloat(PrefKeys.PRESET1_VOLUME_BOOST, prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0f))       // ブースト係数
                                 .putFloat(PrefKeys.PRESET1_DEPTH_SCALER, prefs.getFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f))     // 深さスケーラ
+                                .putBoolean(PrefKeys.PRESET1_HEARING_PROFILE_ENABLED, prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false)) // 補正機能ON/OFF
                                 .apply();
 
-                        Toast.makeText(this, "プリセット1を記憶しました。\n今の状態をいつでも呼出すことができます。", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "プリセット1を記憶しました。", Toast.LENGTH_SHORT).show();
                     })
                     .setNegativeButton("いいえ", null)
                     .show();
@@ -184,7 +212,11 @@ public class EasysettingsActivity extends AppCompatActivity {
         callSCtwoButton = findViewById(R.id.callSCtwoButton);
         callSCtwoButton.setOnClickListener(v -> {
             if (!prefs.contains(PrefKeys.PRESET2_VOLUME)) {
-                Toast.makeText(this, "プリセット2がまだ記憶されていません。", Toast.LENGTH_SHORT).show();
+                new AlertDialog.Builder(this)
+                        .setTitle("注意")
+                        .setMessage("プリセット2がまだ記憶されていません。")
+                        .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
+                        .show();
                 return;
             }
 
@@ -197,6 +229,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_MIC_TYPE, prefs.getBoolean(PrefKeys.PRESET2_MIC_TYPE, false))
                     .putFloat(PrefKeys.PREF_VOLUME_BOOST, prefs.getFloat(PrefKeys.PRESET2_VOLUME_BOOST, 0f))
                     .putFloat(PrefKeys.PREF_DEPTH_SCALER, prefs.getFloat(PrefKeys.PRESET2_DEPTH_SCALER, 1.0f))
+                    .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, prefs.getBoolean(PrefKeys.PRESET2_HEARING_PROFILE_ENABLED, false))
                     .apply();
 
             if (isStreaming) {
@@ -204,8 +237,10 @@ public class EasysettingsActivity extends AppCompatActivity {
                 startService(new Intent(this, AudioStreamService.class)
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
-
-            Toast.makeText(this, "プリセット2を呼び出しました。\n語りの芯を復元しました。", Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setMessage("プリセット2を呼び出しました。\n状態を復元しました。")
+                    .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
 
         //　2のプリセットの記憶をするrecSCtwoButton
@@ -224,9 +259,10 @@ public class EasysettingsActivity extends AppCompatActivity {
                                 .putBoolean(PrefKeys.PRESET2_MIC_TYPE, prefs.getBoolean(PrefKeys.PREF_MIC_TYPE, false))        // マイク種別
                                 .putFloat(PrefKeys.PRESET2_VOLUME_BOOST, prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0f))       // ブースト係数
                                 .putFloat(PrefKeys.PRESET2_DEPTH_SCALER, prefs.getFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f))     // 深さスケーラ
+                                .putBoolean(PrefKeys.PRESET2_HEARING_PROFILE_ENABLED, prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false))// 補正機能ON/OFF
                                 .apply();
 
-                        Toast.makeText(this, "プリセット2を記憶しました。\n今の状態をいつでも呼出すことができます。", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "プリセット2を記憶しました。", Toast.LENGTH_SHORT).show();
                     })
                     .setNegativeButton("いいえ", null)
                     .show();

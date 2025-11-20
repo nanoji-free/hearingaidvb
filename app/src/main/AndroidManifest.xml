@@ -33,6 +33,14 @@
             android:name=".infoActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
+        <activity
+            android:name=".HearingProfileActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+        <activity
+            android:name=".FittingActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
 
         <activity
             android:name=".SplashActivity"

@@ -206,8 +206,10 @@ public class AudioStreamService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         this.lastIntent = intent;
-        startForeground(1, buildNotification());
-
+        boolean requestStreaming = intent != null && intent.getBooleanExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
+        if (requestStreaming) {
+            startForeground(1, buildNotification());
+        }
         SharedPreferences prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
 
         // Intentが空でもSharedPreferencesから補完
@@ -258,21 +260,6 @@ public class AudioStreamService extends Service {
         float correction2000 = prefs.getFloat(PrefKeys.CORRECTION_2000, 1.0f);
         float correction4000 = prefs.getFloat(PrefKeys.CORRECTION_4000, 1.0f);
 
-        /*
-        // 帯域ごとの補正初期化（BandBoostState方式）→　startStreaming()の中に移動
-        if (hearingProfileEnabled && audioRecord != null) {
-            int sampleRate = audioRecord.getSampleRate();
-            float[] gains = {
-                correction250,
-                correction500,
-                correction1000,
-                correction2000,
-                correction4000
-            };
-            initHearingProfileBoosts(sampleRate, gains);
-           }
-        */
-
         // Intentがあれば状態を更新（prefsにも反映）
         if (intent != null) {
             if (intent.hasExtra(PrefKeys.EXTRA_EMPHASIS)) {
@@ -317,7 +304,6 @@ public class AudioStreamService extends Service {
                 prefs.edit().putFloat(PrefKeys.PREF_BALANCE, balance).apply();
             }
 
-            boolean requestStreaming = intent.getBooleanExtra(PrefKeys.EXTRA_REQUEST_STREAMING, false);
             if (requestStreaming && !isStreaming) {
                 startStreaming(intent);
             }
@@ -676,6 +662,10 @@ public class AudioStreamService extends Service {
     public void onDestroy() {
         // ストリーミング停止リクエスト
         isStreaming = false;
+        // 状態を永続化
+        SharedPreferences prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+        prefs.edit().putBoolean(PrefKeys.PREF_IS_STREAMING, false).apply();
+
         memoryHandler.removeCallbacks(memoryCheckRunnable);
         releaseAudioResources();
         // NoiseSuppressor の解放

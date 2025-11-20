@@ -100,8 +100,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="各種のお知らせ など"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@+id/centerImage"
+        android:layout_marginTop="180dp"
+        app:layout_constraintTop_toBottomOf="@+id/up_msg_bord"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         />

@@ -42,6 +42,7 @@ public class PrefKeys {
     public static final String PRESET1_MIC_TYPE         = "preset1_mic";
     public static final String PRESET1_VOLUME_BOOST     = "preset1_boost";
     public static final String PRESET1_DEPTH_SCALER     = "preset1_depth";
+    public static final String PRESET1_HEARING_PROFILE_ENABLED = "preset1_hearing_profile_enabled";
 
     // プリセット2保存用キー
     public static final String PRESET2_VOLUME           = "preset2_volume";
@@ -52,6 +53,8 @@ public class PrefKeys {
     public static final String PRESET2_MIC_TYPE         = "preset2_mic";
     public static final String PRESET2_VOLUME_BOOST     = "preset2_boost";
     public static final String PRESET2_DEPTH_SCALER     = "preset2_depth";
+    public static final String PRESET2_HEARING_PROFILE_ENABLED = "preset2_hearing_profile_enabled";
+
 
     //増幅設定用のバンドごとのパラメータ
     public static final String CORRECTION_250 = "correction_250";

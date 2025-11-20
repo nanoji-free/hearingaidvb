@@ -22,6 +22,7 @@ public class SettingsUtils {
                 .putFloat(PrefKeys.PREF_VOLUME_BOOST, 0.0f)
                 .putFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f)
                 .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false)
+                .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false)
                 .putBoolean(PrefKeys.PREF_IS_STREAMING,wasStreaming)
                 .apply();
 

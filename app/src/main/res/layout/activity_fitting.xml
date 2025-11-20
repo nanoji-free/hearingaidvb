@@ -4,7 +4,6 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -67,18 +66,27 @@
 
         <TextView
             android:id="@+id/currentValue"
-            android:text="補正値: 0dB"
+            android:text="補正値: 0%"
             android:textSize="14sp"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:layout_marginBottom="16dp" />
 
-        <Button
+    <TextView
+        android:id="@+id/confirmBandButtonsMessage"
+        android:text="※ 聞こえない場合には右端を指定してください"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:textSize="14sp"
+        />
+
+    <Button
             android:id="@+id/confirmBandButton"
-            android:text="この帯域はこれでOK\n\n※ 聞こえないときはスライダーの\n一番右の位置を指定して下さい"
+            android:text="この帯域はこれでOK"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp" />
 
         <TextView
             android:id="@+id/progressIndicator"
@@ -94,6 +102,5 @@
             android:layout_height="wrap_content"
             android:layout_gravity="end"
             android:layout_marginBottom="16dp" />
-
-    </LinearLayout>
+</LinearLayout>
 </ScrollView>
