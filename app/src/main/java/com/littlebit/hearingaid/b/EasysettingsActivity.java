@@ -1,4 +1,4 @@
-package com.github.nanoji_free.hearingaidvb;
+package com.littlebit.hearingaid.b;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;

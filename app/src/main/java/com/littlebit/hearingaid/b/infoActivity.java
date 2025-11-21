@@ -1,6 +1,5 @@
-package com.github.nanoji_free.hearingaidvb;
+package com.littlebit.hearingaid.b;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;

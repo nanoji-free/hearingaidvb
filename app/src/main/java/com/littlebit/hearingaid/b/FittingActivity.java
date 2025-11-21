@@ -1,4 +1,4 @@
-package com.github.nanoji_free.hearingaidvb;
+package com.littlebit.hearingaid.b;
 
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 

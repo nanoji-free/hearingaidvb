@@ -1,4 +1,4 @@
-package com.github.nanoji_free.hearingaidvb;
+package com.littlebit.hearingaid.b;
 
 public class PrefKeys {
     public static final String PREFS_NAME        = "hearing_aid_prefs";

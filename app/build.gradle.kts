@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.github.nanoji_free.hearingaidvb"
+    namespace = "com.littlebit.hearingaid.b"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.github.nanoji_free.hearingaidvb"
+        applicationId = "com.littlebit.hearingaid.b"
         minSdk = 28
         targetSdk = 34
         versionCode = 1

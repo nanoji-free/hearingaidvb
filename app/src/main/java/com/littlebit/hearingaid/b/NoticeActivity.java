@@ -1,4 +1,4 @@
-package com.github.nanoji_free.hearingaidvb;
+package com.littlebit.hearingaid.b;
 
 import android.content.pm.PackageInfo;
 import android.os.Build;

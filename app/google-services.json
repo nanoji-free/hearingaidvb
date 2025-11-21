@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "463305980057",
-    "project_id": "hearingaidvb",
-    "storage_bucket": "hearingaidvb.firebasestorage.app"
+    "project_number": "255314996064",
+    "project_id": "littlebit-hearingaid-b",
+    "storage_bucket": "littlebit-hearingaid-b.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:463305980057:android:850a028b077d84a7a12008",
+        "mobilesdk_app_id": "1:255314996064:android:80bbda1ecbaffe09580c05",
         "android_client_info": {
-          "package_name": "com.github.nanoji_free.hearingaidvb"
+          "package_name": "com.littlebit.hearingaid.b"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDlky1etlnAvA7d1Jlw-hmAB2ep4hm80T4"
+          "current_key": "AIzaSyCh1ma4izOdYuZBdYO2auiHtOoVFgps42M"
         }
       ],
       "services": {

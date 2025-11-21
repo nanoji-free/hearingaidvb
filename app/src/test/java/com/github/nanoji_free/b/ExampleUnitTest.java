@@ -1,4 +1,4 @@
-package com.github.nanoji_free.hearingaidvb;
+package com.github.nanoji_free.b;
 
 import org.junit.Test;
 

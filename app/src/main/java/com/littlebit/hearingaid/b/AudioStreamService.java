@@ -1,4 +1,4 @@
-package com.github.nanoji_free.hearingaidvb;
+package com.littlebit.hearingaid.b;
 
 import android.Manifest;
 import android.app.ActivityManager;
@@ -15,7 +15,6 @@ import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
-import android.os.Debug;
 import android.os.Handler;
 import android.os.IBinder;
 import android.media.audiofx.NoiseSuppressor;
@@ -936,7 +935,6 @@ public class AudioStreamService extends Service {
         }
         prefs.edit().putBoolean("isStreaming", false).apply();
     }
-
 
     private void handleMemoryPressure() {
         isStreaming = false;
