@@ -21,9 +21,9 @@ public class DispHelper {
         if (savedId == R.id.bgNone) {
             layout.setBackground(null);
         } else if (savedId == R.id.bgDefault) {
-            layout.setBackgroundResource(R.drawable.buckofonce);
+            layout.setBackgroundResource(R.drawable.def_back);
         } else if (savedId == R.id.bgRecommended) {
-            layout.setBackgroundResource(R.drawable.oncerecback);
+            layout.setBackgroundResource(R.drawable.recommended_one);
         }
     }
     public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {

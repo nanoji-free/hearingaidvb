@@ -1,46 +1,176 @@
 <resources>
-    <string name="app_name">hearingAidVb</string>
-    <string name="action_settings">Settings</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
+    <!-- アプリ名・基本 -->
+    <string name="app_name">耳みみエイド</string>
 
-    <string name="lorem_ipsum">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
-        volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
-        dui nec risus. Maecenas non sodales nisi, vel dictum dolor. Class aptent taciti sociosqu ad
-        litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse blandit eleifend
-        diam, vel rutrum tellus vulputate quis. Aliquam eget libero aliquet, imperdiet nisl a,
-        ornare ex. Sed rhoncus est ut libero porta lobortis. Fusce in dictum tellus.\n\n
-        Suspendisse interdum ornare ante. Aliquam nec cursus lorem. Morbi id magna felis. Vivamus
-        egestas, est a condimentum egestas, turpis nisl iaculis ipsum, in dictum tellus dolor sed
-        neque. Morbi tellus erat, dapibus ut sem a, iaculis tincidunt dui. Interdum et malesuada
-        fames ac ante ipsum primis in faucibus. Curabitur et eros porttitor, ultricies urna vitae,
-        molestie nibh. Phasellus at commodo eros, non aliquet metus. Sed maximus nisl nec dolor
-        bibendum, vel congue leo egestas.\n\n
-        Sed interdum tortor nibh, in sagittis risus mollis quis. Curabitur mi odio, condimentum sit
-        amet auctor at, mollis non turpis. Nullam pretium libero vestibulum, finibus orci vel,
-        molestie quam. Fusce blandit tincidunt nulla, quis sollicitudin libero facilisis et. Integer
-        interdum nunc ligula, et fermentum metus hendrerit id. Vestibulum lectus felis, dictum at
-        lacinia sit amet, tristique id quam. Cras eu consequat dui. Suspendisse sodales nunc ligula,
-        in lobortis sem porta sed. Integer id ultrices magna, in luctus elit. Sed a pellentesque
-        est.\n\n
-        Aenean nunc velit, lacinia sed dolor sed, ultrices viverra nulla. Etiam a venenatis nibh.
-        Morbi laoreet, tortor sed facilisis varius, nibh orci rhoncus nulla, id elementum leo dui
-        non lorem. Nam mollis ipsum quis auctor varius. Quisque elementum eu libero sed commodo. In
-        eros nisl, imperdiet vel imperdiet et, scelerisque a mauris. Pellentesque varius ex nunc,
-        quis imperdiet eros placerat ac. Duis finibus orci et est auctor tincidunt. Sed non viverra
-        ipsum. Nunc quis augue egestas, cursus lorem at, molestie sem. Morbi a consectetur ipsum, a
-        placerat diam. Etiam vulputate dignissim convallis. Integer faucibus mauris sit amet finibus
-        convallis.\n\n
-        Phasellus in aliquet mi. Pellentesque habitant morbi tristique senectus et netus et
-        malesuada fames ac turpis egestas. In volutpat arcu ut felis sagittis, in finibus massa
-        gravida. Pellentesque id tellus orci. Integer dictum, lorem sed efficitur ullamcorper,
-        libero justo consectetur ipsum, in mollis nisl ex sed nisl. Donec maximus ullamcorper
-        sodales. Praesent bibendum rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus
-        libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
-        vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
+    <!-- ナビゲーション・共通 -->
+    <string name="action_settings">設定</string>
+    <string name="next">次へ</string>
+    <string name="previous">戻る</string>
+    <string name="close">閉じる</string>
+
+    <!-- 使い方ガイド（全文） -->
+    <string name="guide_full_text">
+        <![CDATA[
+        【基本設定】\n
+        \n
+        □ 音声の開始と停止\n
+        このアプリでは、中央の「開始」ボタンを押すことで、周囲の音をリアルタイムで再生しす。\n
+        もう一度押すと「停止」になり、音声処理が終了します。\n
+        • 音声が再生されているときは「作動中」と表示されます。\n
+        • 停止中は「動作停止中」と表示されます。\n
+        \n
+        □ マイク権限について\n
+        このアプリでは、音声を再生するためにマイクの使用許可が必要です。\n
+        初回起動時や権限がOFFの場合は、設定画面からマイクをONにしてください。\n
+        • Androidの設定 ＞ アプリ ＞ 耳みみエイド ＞ 権限 ＞ マイク → ON\n
+        \n
+        □ 音量の調整\n
+        画面下部のスライダーで、語りの大きさ（音量）を調整できます。\n
+        数値は「0.00〜1.00」の範囲で表示され、リアルタイムで反映されます。\n
+        \n
+        □ 音質の調整\n
+        A) ノイズ除去\n
+        「ノイズ除去」スイッチをONにすると、周囲の環境音を抑えます。\n
+        静かな環境ではOFF、騒がしい場所ではONがおすすめです。\n
+        B) 音声強調\n
+        「音声強調」スイッチをONにすると、ノイズの軽減をし音声を強調します。\n
+        OFFにすると、自然な音質に近くなります。\n
+　　　　　\n
+        □ 設定の初期化\n
+       「設定を戻す」ボタンを押すと、音量・バランス・ノイズ除去・音声強調などの設定が初期状態に戻ります。\n
+        音声処理が作動中の場合は、自動的に再起動され、設定が反映されます。\n
+\n
+        □ 中央画像の表示\n
+        画面中央に好みの画像を表示できます。\n
+        表示する画像は、設定画面から「なし／推奨画像／ユーザー選択画像」から選べます。\n
+\n\n
+        【詳細な設定】\n
+        \n
+        □ 外部マイクの切り替え\n
+        「オプションマイク」スイッチをONにすると、スマホのサブマイクやスマホに接続された外部マイクを使用します。\n
+        ポケットにスマホを入れて使う場合はOFF、テーブルに置いて使う場合はONにすることをお勧めします。\n
+        \n
+        □ 限界突破モード（Super Emphasis）\n
+        「音声強調機能ブースト」スイッチをONにすると、音声を最大限に強調します。\n
+        騒音環境や聞き取りにくい場面での使用に適しています。\n
+         ※ この機能をONにすると、通常の音声強調も自動的にONになります。\n
+        \n
+        □ 聴力プロファイル補正\n
+        「聴力プロファイル補正」スイッチをONにすると、事前に設定した聞こえ方に合わせて音声を強調します。この補正は「聞こえ方の設定」画面で調整ができます。\n
+        \n
+        □ 音量増量ブースター\n
+        スライダーで音量の底上げができます。\n
+        全体のボリュームが上がりますが、ノイズが発生しやすくなります。またハウリングしやすくなる点にもご注意ください。\n
+        \n
+        □ 左右バランスの調整\n
+        スライダーで左右の聞こえ方を調整できます。\n
+        左右の聞こえ方の調整ができますのでご活用ください。片耳使用の際にもお役立てください。\n
+        「バランス初期化」ボタンを押すと、左右のバランスを中央（0.0）に戻せます。\n
+        \n
+        □ 設定の初期化\n
+        「設定を戻す」ボタンを押すと、音量・バランス・ノイズ除去・音声強調などの設定が初期状態に戻ります。\n
+        音声処理が作動中の場合は、自動的に再起動され、設定が反映されます。\n
+        \n
+        □ 表示設定\n
+        「画面設定へ」ボタンから、背景や中央画像の表示を変更できます。\n
+        ※ セーフモード中は変更できません。\n
+        \n
+        □ 聞こえ方の設定\n
+        「聞こえ方の設定」ボタンから、各周波数帯の補正値を調整できます。\n
+        音声の強調をするための設定画面に移行します。\n
+        \n
+        □ セーフモード\n
+        セーフモードをONにすると、画像の変更など一部の機能が制限され、安定性が優先されます。動作が不安定な場合や、メモリ負荷を抑えたいときに有効です。\n
+\n\n
+        【 聞こえ方の設定】\n
+        この画面では、聞こえ方に合わせて、各周波数帯の音声補正を行うことができます。\n
+        補正値は、100％で約30dB相当の増幅となるように設計されています。\n
+        \n
+        □ 補正できる周波数帯\n
+            ・250Hz（低音域：母音や環境音）\n
+            ・500Hz（中低音域：話し声の土台）\n
+            ・1000Hz（中音域：語りの芯）\n
+            ・2000Hz（中高音域：子音や明瞭性）\n
+            ・4000Hz（高音域：さ行・た行などの鋭い音）\n
+        \n
+        □ スライダーで調整\n
+        各帯域のスライダーを動かすと、補正値がリアルタイムで反映されます。\n
+        数値は「0〜100％」で表示され、補正の強さを視覚的に確認できます。\n
+        ※音声処理が作動中の場合でも、補正値が反映され、聞こえ方の変化を確認しながら調整できます。\n
+        \n
+        □ フィッティング画面へ\n
+        「フィッティングを行う」ボタンから、純音を聞きながら補正値を調整できる画面に移動できます。より正確に聞こえ方を確認したいときにご活用ください。\n
+\n\n
+        【フィッティングを行う】\n
+        この画面では、各周波数帯の音を実際に聞きながら、補正値を調整することができます。\n
+        聞こえるまで少しずつスライダーを上げることで最適な補正を見つけていきます。\n
+        \n
+        □「全体を調整する」\n
+        250Hz〜4000Hzまで順番に調整します\n
+         1.「音を流す」ボタンで、選択した帯域の純音（10秒間）が再生されます\n
+         2.スライダーを少しずつ上げ聞こえるポイントを探してください\n
+         3.「OK」ボタンで補正値を保存します\n
+         4.全帯域の調整を終えると設定が完了します\n
+        \n
+        □ 「特定の帯域を調整する」\n
+        気になる帯域だけを選んで調整できます\n
+         1.「音を流す」ボタンで、選択した帯域の純音（10秒間）が再生されます\n
+         2.スライダーを少しずつ上げ聞こえるポイントを探してください\n
+         3.「OK」ボタンで補正値を保存します\n
+         4.帯域の調整を終えると設定が完了します\n
+\n\n
+        【かんたん設定】\n
+        この画面では、利用シーンに応じて、あらかじめ用意された設定をワンタップで切り替えることができます。\n
+        また、自分に合った設定を「プリセット1」「プリセット2」として保存・呼び出すこともできます。\n
+        \n
+        □　モード選択\n
+  　　      「卓上モード」\n
+             机の上にスマホを置いて使うときに最適です\n
+        　　「テレビ視聴モード」\n
+             テレビの音声を聞き取りやすくする設定です\n
+        　　「お出かけモード」\n
+             屋外での使用に適したノイズ除去と強調が有効になります\n
+        \n
+        □　プリセットの保存と呼び出し\n
+            「プリセット1に保存」ボタンで、現在の設定を保存できます\n
+            「プリセット1を呼び出す」ボタンで、保存した設定を復元できます\n
+            　※プリセット2についても同様です。\n
+        \n
+        □　バージョンの通知について\n
+        　新しいバージョンがある場合は、画面上部に「アップデートできます」と表示します。\n
+        　アプリのアップデートが発生した場合には案内あうるようにします。\n
+        　（強制的なアップデートは行いません）\n
+\n
+        ]]>
+    </string>
+
+    <!-- ダイアログ・注意文など -->
+    <string name="mic_permission_notice">
+        音声が再生できない場合はスマホの設定を確認してください。\n\n
+        設定＞アプリ＞耳みみエイド＞許可＞マイクの権限を許可する。\n\n
+        音量の調整はアプリの音量以外に本体の音量やイヤホンの音量もご確認ください。
+    </string>
+
+    <!-- アプリについて -->
+    <string name="about_app_text">
+        <![CDATA[
+        「聞こえるって、すばらしい！」\n\n
+        このアプリはスマホの周囲の音をリアルタイムで集音し再生する聴覚支援ツールです。\n\n
+        特に骨伝導ワイヤレスイヤホンとの組み合わせによる聴覚支援補助を目指しています。\n
+        集音ツールとしてテーブルの上やテレビの近くにスマートフォンを置いてご活用ください。\n\n
+        (ワイヤレスイヤホンを使用すると、音声を転送する関係上、音声の遅延が発生することがあります。)\n
+        ポケットにスマートフォンを入れて使用する場合などは、アプリの詳細画面から外部マイクを使用しない設定に切り替えるか、ノイズ除去スイッチをオンにした状態で使用することをお勧めします。\n
+        また、その際は音声の遅延防止の観点などから有線のイヤホンをご利用をおすすめします。\n\n
+        屋外で使用するシチュエーションなど様々な状況に対する対応を目的に「外部マイクの使用」「左右スピーカーのバランス調整」「音声強調の強化」「音量の増強」などの機能を設けています。必要に応じた調整をしてご利用ください。\n\n
+        ノイズ除去機能を搭載したスマホでは、その機能を利用することもできるようにしています。必要に応じてご活用ください。\n\n
+        イヤホンからの音漏れや振動の漏れが原因でハウリングする場合があります。\n
+        スマホとイヤホンの距離や、音量の調整をすることで改善する場合があります。\n\n
+        スマホのメモリが不足した場合、自動的に状況を改善する機能を設けています。その機能が働いた場合には１～２秒程度音声が停止し、ノイズ除去機能が停止することがあります。その場合には必要に応じてノイズ除去スイッチを再度操作してご利用ください\n\n
+        メモリ使用量が高まると、音声処理を一時停止することで安定性を保っています。\n
+        状況が改善しない場合は、アプリの再起動をおすすめします。。\n\n
+        画面に表示する画像を選択することができますが、端末のメモリの状況によっては画像がリアルタイムで変更されない場合があります。その場合は一度アプリを終了し、改めて再開してください。\n\n\n
+        本アプリに起因する損害は、その一切を当方では負いかねますのでご了承の上、本アプリをご利用下さい。\n\n
+        ]]>
     </string>
 </resources>
+

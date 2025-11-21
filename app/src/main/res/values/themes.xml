@@ -8,7 +8,8 @@
 
     <!-- スプラッシュ専用テーマ -->
     <style name="Theme.Splash" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:windowBackground">@drawable/sumple_splash</item> <!-- ←仮設画像を背景に -->
+        <item name="android:windowBackground">@android:color/black</item>
+        <!-- ↑　仮設画像を背景にするなら「@drawable/sumple_splash</item>」に差し替え -->
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
     </style>

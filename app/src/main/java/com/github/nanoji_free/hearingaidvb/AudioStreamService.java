@@ -120,7 +120,7 @@ public class AudioStreamService extends Service {
     private double cutHpPrevIn,  cutHpPrevOut,  cutLpPrevOut;// MONO用の状態
     private double cutLowHz  = 15.0;
     private double cutHighHz = 250.0;
-    private volatile double bandCutDepth = 0.90; // 0.0=無効, 1.0=最大カット,初期は0.8で仮設
+    private volatile double bandCutDepth = 0.85; // 0.0=無効, 1.0=最大カット,初期は0.8で仮設
 
     // --- 高域減衰用（例: 7.5kHz～Nyquist）---
     private double highCutHpAlpha = 0.0;
@@ -187,7 +187,7 @@ public class AudioStreamService extends Service {
         return new Pair<>(16000, fb > 0 ? fb : 4096);
     }
 
-    private float appVolume = 0.65f;  // 0.0f～1.0f //ホワイトノイズ対策で上限を0.5で反映
+    private float appVolume = 0.65f;  // 0.0f～1.0f //過去はホワイトノイズ対策で上限を0.5で反映
     private float balance    = 0f;
     @Override
     public void onCreate() {

@@ -234,7 +234,5 @@ public class FittingActivity extends AppCompatActivity {
                 fittingInstruction.setText(freqHz + "Hz の音を10秒ほど再生します。\n聞こえるまでスライダーを少しずつ上げてください。");
             }
         }, 10000);
-
-
     }
 }

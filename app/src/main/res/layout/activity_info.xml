@@ -38,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="使い方ガイド（マイクの権限について）"
+            android:text="使い方ガイド"
             app:layout_constraintTop_toBottomOf="@+id/addButton"
             />
         <Button
@@ -48,8 +48,15 @@
             android:text="このアプリについて"
             app:layout_constraintTop_toBottomOf="@+id/infoButton"
             />
+        <Button
+            android:id="@+id/micNoticeButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="音が出ないときは？"
+            app:layout_constraintTop_toBottomOf="@id/noticeButton"
+             />
 
-    <Button
+        <Button
         android:id="@+id/infoReturnButton"
         android:layout_width="128dp"
         android:layout_height="wrap_content"

@@ -131,7 +131,7 @@
         android:id="@+id/presetButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="全体を初期設定に戻す"
+        android:text="音量やバランスを初期設定に戻す"
         android:layout_marginTop="4dp"
         app:layout_constraintTop_toBottomOf="@id/balPresetButton"
         />

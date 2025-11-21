@@ -119,9 +119,9 @@ public class DisplaySettingsActivity extends AppCompatActivity {
                 if (checkedId == R.id.bgNone) {
                     rootLayout.setBackground(null);
                 } else if (checkedId == R.id.bgDefault) {
-                    rootLayout.setBackgroundResource(R.drawable.buckofone);
+                    rootLayout.setBackgroundResource(R.drawable.def_back);
                 } else if (checkedId == R.id.bgRecommended) {
-                    rootLayout.setBackgroundResource(R.drawable.onerecback);
+                    rootLayout.setBackgroundResource(R.drawable.recommended_one);
                 }
                 prefs.edit().putInt(PrefKeys.PREF_BACKGROUND_SELECTION, checkedId).apply();
 
