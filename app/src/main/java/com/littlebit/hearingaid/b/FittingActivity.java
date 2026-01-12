@@ -2,6 +2,7 @@ package com.littlebit.hearingaid.b;
 
 import android.app.AlertDialog;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -10,6 +11,7 @@ import android.os.Handler;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -36,6 +38,16 @@ public class FittingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SharedPreferences prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+        boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
+
+        if (!isPremium) {
+            startActivity(new Intent(this, PremiumRequiredActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_fitting);
 
         fittingTitle = findViewById(R.id.fittingTitle);
@@ -86,12 +98,21 @@ public class FittingActivity extends AppCompatActivity {
 
         //「音を流す」ボタン
         playToneButton.setOnClickListener(v -> {
+
+            // ★連打防止（200ms）
+            playToneButton.setEnabled(false);
+            new Handler().postDelayed(() -> playToneButton.setEnabled(true), 200);
+
             if (toneTrack != null) {
                 toneTrack.stop();
                 toneTrack.release();
                 toneTrack = null;
             }
             int freq = bands[currentBandIndex];
+            // ★ スライダーが 0 のときは 1 にして“完全無音”を避ける
+            if (fittingSlider.getProgress() == 0) {
+                fittingSlider.setProgress(1);
+            }
             float volume = fittingSlider.getProgress() / 30.0f; // 0.0〜1.0
             playTone(freq, volume);
         });
@@ -128,14 +149,14 @@ public class FittingActivity extends AppCompatActivity {
             //　まず純音を停止する
             if (toneTrack != null) {
                 toneTrack.stop();
+                fittingInstruction.setTextColor(Color.WHITE);
                 fittingInstruction.setText(freq + "Hz の音を10秒ほど再生します。\n聞こえるまでスライダーを少しずつ上げてください。");
                 toneTrack.release();
                 toneTrack = null;
             }
             // スライダー値を補正倍率に変換（0〜30 → 0.0〜3.0）
             float gain = fittingSlider.getProgress() * 0.1f;
-            // 現在の帯域に対応する補正値を保存
-            SharedPreferences prefs = getSharedPreferences("hearing_prefs", MODE_PRIVATE);
+
             switch (freq) {
                 case 250:
                     prefs.edit().putFloat(PrefKeys.CORRECTION_250, gain).apply();
@@ -222,16 +243,25 @@ public class FittingActivity extends AppCompatActivity {
                 generatedSnd.length,
                 AudioTrack.MODE_STREAM);
 
-        fittingInstruction.setText(freqHz + "Hz の音を再生中です。\n聞こえるまでスライダーを少しずつ上げてください。");
+        fittingInstruction.setTextColor(Color.RED);
+        fittingInstruction.setText(freqHz + "Hz の音を再生中です。\n最初は聞こえません。聞こえるまでスライダーを少しずつ上げてください。");
 
         toneTrack.play();
         toneTrack.setVolume(volume); // API 21以降
-        toneTrack.write(generatedSnd, 0, generatedSnd.length);
+        // ★ 再生準備のために 20ms 遅延して書き込み
+        new Handler().postDelayed(() -> {
+            if (toneTrack != null) {
+                toneTrack.write(generatedSnd, 0, generatedSnd.length);
+            }
+        }, 20);
 
         new Handler().postDelayed(() -> {
-            if (toneTrack != null && toneTrack.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
-                fittingInstruction.setText(freqHz + "Hz の音を10秒ほど再生します。\n聞こえるまでスライダーを少しずつ上げてください。");
-            }
+            if (toneTrack == null) return;
+            fittingInstruction.setTextColor(Color.WHITE);
+            fittingInstruction.setText(
+                    freqHz + "Hz の音を10秒ほど再生します。\n" +
+                            "最初は聞こえません。聞こえるまでスライダーを少しずつ上げてください。"
+            );
         }, 10000);
     }
 }

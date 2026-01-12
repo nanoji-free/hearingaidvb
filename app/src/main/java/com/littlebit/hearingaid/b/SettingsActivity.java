@@ -1,8 +1,8 @@
 package com.littlebit.hearingaid.b;
 
-// TODO: BillingLibruaryの関連コードの実装
+// TODO: BillingLibruaryの関連コードの実装 →　完了　20260108（商品IDを取得してコーディング済み）
 // TODO: 本番用JSONの準備、現状のテスト用のコードからの更新
-// TODO: GooglePlayConsoleの準備
+// TODO: GooglePlayConsoleの準備　→　クローズドテストまでの準備完了
 
 import android.Manifest;
 import androidx.appcompat.app.AlertDialog;
@@ -47,6 +47,18 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+
+        boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
+
+        if (!isPremium) {
+            startActivity(new Intent(this, PremiumRequiredActivity.class));
+            finish();
+            return;
+        }
+
+
         setContentView(R.layout.activity_settings);
 
         ConstraintLayout rootLayout = findViewById(R.id.rootLayout);
@@ -57,7 +69,6 @@ public class SettingsActivity extends AppCompatActivity {
         noiseFilterSwitch = findViewById(R.id.noiseFilterSwitch);
         emphasisSwitch = findViewById(R.id.emphasisSwitch);
 
-        prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
         float savedBalance = prefs.getFloat(PrefKeys.PREF_BALANCE, 0f);
         isStreaming = prefs.getBoolean("isStreaming", false);
 
@@ -297,6 +308,23 @@ public class SettingsActivity extends AppCompatActivity {
             // UI制御を即時反映
             updateSafeModeUi(isChecked);
 
+            // --- セーフモード時は NoiseSuppressor を強制OFF ---
+            if (isChecked) {
+                // フラグをOFFにする
+                prefs.edit().putBoolean(PrefKeys.PREF_NOISE_FILTER, false).apply();
+
+                // UIのノイズ除去スイッチもOFF & 無効化
+                if (noiseFilterSwitch != null) {
+                noiseFilterSwitch.setChecked(false);
+                noiseFilterSwitch.setEnabled(false);
+                }
+            } else {
+                // セーフモード解除 → ノイズ除去スイッチを再び操作可能に
+                if (noiseFilterSwitch != null) {
+                noiseFilterSwitch.setEnabled(true);
+                }
+            }
+
             // トースト通知で語りを補足
             Toast.makeText(this,
                     isChecked ? "セーフモードを有効にしました（安定性優先）" : "セーフモードを解除しました（通常モード）",
@@ -350,14 +378,22 @@ public class SettingsActivity extends AppCompatActivity {
         if (safeModeSwitch != null) {
             safeModeSwitch.setChecked(isSafeMode);
         }
+
+        // セーフモード中はノイズ除去スイッチをOFF & 無効化
+        if (noiseFilterSwitch != null) {
+        if (isSafeMode) {
+            noiseFilterSwitch.setChecked(false);
+            noiseFilterSwitch.setEnabled(false);
+        } else {
+            noiseFilterSwitch.setEnabled(true);
+            }
+        }
+
         if (hearingProfileSwitch != null) {
             hearingProfileSwitch.setChecked(prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false));
         }
 
-
-
         updateSafeModeUi(isSafeMode);
-
     }
     private void updateSafeModeUi(boolean isSafeMode) {
         if (toChangeViewButton != null) {

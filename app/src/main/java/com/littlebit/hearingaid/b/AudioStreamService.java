@@ -85,7 +85,7 @@ public class AudioStreamService extends Service {
                 //停止した日時を取得しダイアログのメッセージ用のテキストデータを作成し表示
                 showMemoryNotification(); // 通知表示を追加
                 }
-            memoryHandler.postDelayed(this, 300_000); // 10秒ごとにチェックから5分毎に変更
+            memoryHandler.postDelayed(this, 300_000); // 5分毎にメモリチェック
             }
         }
     };
@@ -358,6 +358,8 @@ public class AudioStreamService extends Service {
             return;
         }
         isStreaming = true;
+        boolean isSafeMode = prefs.getBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, false);
+
         // サンプルレート＆バッファを自動選択
         Pair<Integer, Integer> best = findBestSampleRate();
         final int sampleRate = best.first;
@@ -405,7 +407,7 @@ public class AudioStreamService extends Service {
         }
 
         // 雑踏ノイズ抑制 (NoiseSuppressor)
-        if (NoiseSuppressor.isAvailable()) {
+        if (!isSafeMode && NoiseSuppressor.isAvailable()) {
             noiseSuppressor = NoiseSuppressor.create(audioRecord.getAudioSessionId());
             noiseSuppressor.setEnabled(noiseFilterEnabled);
         }
@@ -880,15 +882,15 @@ public class AudioStreamService extends Service {
 
     //スライダー値(0.0〜1.0)から appVolume を設定（設定を出力ゲインとのハイブリッド式から修正）
     private void mapSliderToGains(float vol) {
-        appVolume = vol * MAX_APP_VOLUME;
-
+        float correctionFactor = 1.15f; // フィルタ後の音やせ補正
+        appVolume = Math.min(vol * MAX_APP_VOLUME * correctionFactor, 1.0f);
         setAppVolume(appVolume);
         // boostGain は DSP 側で直接参照される想定
         Log.d("AudioStreamService",
               String.format("Slider=%.2f AppVol=%.2f BoostGain=%.2f", vol, appVolume, boostGain));
     }
 
-    //メモリが圧迫されてクラッシュするのを防ぐためにネイティブのコード類を開放（手動ガベージのイメージ）
+    // メモリが圧迫されてクラッシュするのを防ぐためにネイティブのコード類を開放（手動ガベージのイメージ）
     private void releaseAudioResources() {
         isStreaming = false;
 
@@ -937,6 +939,7 @@ public class AudioStreamService extends Service {
     }
 
     private void handleMemoryPressure() {
+        prefs.edit().putBoolean(PrefKeys.PREF_NOISE_FILTER, false).apply();//NoiseSuppresorをオフ
         isStreaming = false;
         if (streamThread != null) {
             try {

@@ -63,7 +63,7 @@ public class ImageRecoveryHelper {
 
         } catch (Exception ex) {
             // ⑦ 軽量化や保存に失敗した場合は代替画像を表示し、選択状態を初期化
-            target.setImageResource(R.drawable.betaimage);
+            target.setImageResource(R.drawable.topone);
             prefs.edit().putInt(PrefKeys.PREF_CENTER_SELECTION, R.id.chrRecommended).apply();
             prefs.edit().remove(PrefKeys.PREF_CENTER_IMAGE_URI).apply();
 

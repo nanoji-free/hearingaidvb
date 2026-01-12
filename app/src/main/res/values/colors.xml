@@ -2,4 +2,11 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- ダイアログ背景(黒） -->
+    <color name="dialog_background">#000000</color>
+
+    <!-- ダイアログ文字色（白） -->
+    <color name="dialog_text">#FFFFFF</color>
+
 </resources>

@@ -7,7 +7,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="@color/dialog_background">
 
         <TextView
             android:id="@+id/guide_message"
@@ -15,7 +16,9 @@
             android:layout_height="wrap_content"
             android:text="ここに説明文を追加します。"
             android:textSize="16sp"
-            android:lineSpacingExtra="4dp"/>
+            android:lineSpacingExtra="4dp"
+            android:textColor="@color/dialog_text"
+        />
 
     </LinearLayout>
 </ScrollView>

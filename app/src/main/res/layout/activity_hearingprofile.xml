@@ -1,205 +1,280 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/aboutThisPage"
-        android:layout_width="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/rootLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:text=" 【 聞こえ方の設定 】"
-        android:textSize="24dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:padding="16dp"
+        android:background="@color/dialog_background">
 
-    <LinearLayout
-        android:id="@+id/sliderGroup"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:orientation="horizontal"
-        android:layout_marginTop="16dp"
-        app:layout_constraintTop_toBottomOf="@id/aboutThisPage"
-        app:layout_constraintBottom_toTopOf="@id/toFittingButton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        <!-- タイトル -->
+        <TextView
+            android:id="@+id/aboutThisPage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="【 聞こえ方の設定 】"
+            android:textSize="22sp"
+            android:layout_marginBottom="12dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- フィッティングを行う -->
+        <Button
+            android:id="@+id/toFittingButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="フィッティングを行う"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/aboutThisPage"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- 説明文 -->
+        <TextView
+            android:id="@+id/profileDescription"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="フィッティングで測定した補正値を確認・微調整できます。"
+            android:textSize="14sp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/toFittingButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- ここから周波数ブロック群 -->
 
         <!-- 250Hz -->
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/block250"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/profileDescription"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
             <TextView
                 android:id="@+id/label_250"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="250Hz"
-                android:textSize="14sp"
-                android:layout_marginBottom="4dp" />
-
-            <SeekBar
-                android:id="@+id/slider_250"
-                android:layout_width="180dp"
-                android:layout_height="160dp"
-                android:max="100"
-                android:rotation="270"
-                android:layout_marginBottom="4dp" />
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/value_250"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0%"
-                android:textSize="12sp" />
-        </LinearLayout>
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <SeekBar
+                android:id="@+id/slider_250"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:max="100"
+                app:layout_constraintTop_toBottomOf="@id/label_250"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- 500Hz -->
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/block500"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-        <TextView
-            android:id="@+id/label_500"
-            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="500Hz"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp" />
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/block250"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
 
-        <SeekBar
-            android:id="@+id/slider_500"
-            android:layout_width="180dp"
-            android:layout_height="160dp"
-            android:max="100"
-            android:rotation="270"
-            android:layout_marginBottom="4dp" />
-        <TextView
-            android:id="@+id/value_500"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0%"
-            android:textSize="12sp" />
-        </LinearLayout>
+            <TextView
+                android:id="@+id/label_500"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="500Hz"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/value_500"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0%"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <SeekBar
+                android:id="@+id/slider_500"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:max="100"
+                app:layout_constraintTop_toBottomOf="@id/label_500"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
 
         <!-- 1000Hz -->
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/block1000"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/block500"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
             <TextView
                 android:id="@+id/label_1000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="1000Hz"
-                android:textSize="14sp"
-                android:layout_marginBottom="4dp" />
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <SeekBar
-                android:id="@+id/slider_1000"
-                android:layout_width="180dp"
-                android:layout_height="160dp"
-                android:max="100"
-                android:rotation="270"
-                android:layout_marginBottom="4dp" />
             <TextView
                 android:id="@+id/value_1000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0%"
-                android:textSize="12sp" />
-        </LinearLayout>
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <SeekBar
+                android:id="@+id/slider_1000"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:max="100"
+                app:layout_constraintTop_toBottomOf="@id/label_1000"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
         <!-- 2000Hz -->
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/block2000"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/block1000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
             <TextView
                 android:id="@+id/label_2000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="2000Hz"
-                android:textSize="14sp"
-                android:layout_marginBottom="4dp" />
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <SeekBar
-                android:id="@+id/slider_2000"
-                android:layout_width="180dp"
-                android:layout_height="160dp"
-                android:max="100"
-                android:rotation="270"
-                android:layout_marginBottom="4dp" />
             <TextView
                 android:id="@+id/value_2000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0%"
-                android:textSize="12sp" />
-        </LinearLayout>
-        <LinearLayout
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <SeekBar
+                android:id="@+id/slider_2000"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:max="100"
+                app:layout_constraintTop_toBottomOf="@id/label_2000"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <!-- 4000Hz -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/block4000"
             android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/block2000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
             <TextView
                 android:id="@+id/label_4000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="4000Hz"
-                android:textSize="14sp"
-                android:layout_marginBottom="4dp" />
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <SeekBar
-                android:id="@+id/slider_4000"
-                android:layout_width="180dp"
-                android:layout_height="160dp"
-                android:max="100"
-                android:rotation="270"
-                android:layout_marginBottom="4dp" />
             <TextView
                 android:id="@+id/value_4000"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="0%"
-                android:textSize="12sp" />
-        </LinearLayout>
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-    </LinearLayout>
+            <SeekBar
+                android:id="@+id/slider_4000"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:max="100"
+                app:layout_constraintTop_toBottomOf="@id/label_4000"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
+        <!-- 戻るボタン -->
+        <Button
+            android:id="@+id/hearingReturnButton"
+            android:layout_width="128dp"
+            android:layout_height="wrap_content"
+            android:text="戻る"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
+            app:layout_constraintTop_toBottomOf="@id/block4000"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-    <Button
-        android:id="@+id/toFittingButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="フィッテングを行う"
-        app:layout_constraintBottom_toTopOf="@id/hearingReturnButton"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        />
-
-    <Button
-        android:id="@+id/hearingReturnButton"
-        android:layout_width="128dp"
-        android:layout_height="wrap_content"
-        android:text="戻る"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="16dp"
-        />
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

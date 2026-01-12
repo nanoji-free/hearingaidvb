@@ -52,7 +52,7 @@
             android:id="@+id/micNoticeButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="音が出ないときは？"
+            android:text="困ったときは"
             app:layout_constraintTop_toBottomOf="@id/noticeButton"
              />
 

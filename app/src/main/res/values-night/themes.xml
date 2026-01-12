@@ -1,7 +1,19 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
 
+    <style name="Base.Theme.HearingAidVb" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.HearingAidVb" parent="Base.Theme.HearingAidVb" />
+
+</resources>
+<!--
+<resources xmlns:tools="http://schemas.android.com/tools">
+-->
+    <!-- Base application theme. -->
+<!--
     <style name="Theme.AppCompat" parent="Theme.AppCompat.Light.DarkActionBar">
+-->
         <!-- 必要に応じてカスタマイズ内容を追加 -->
+<!--
     </style>
 </resources>
+-->

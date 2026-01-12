@@ -75,7 +75,7 @@ public class DisplaySettingsActivity extends AppCompatActivity {
                             if (bitmap != null) {
                                 centerImageView.setImageBitmap(bitmap);
                             } else {
-                                centerImageView.setImageResource(R.drawable.betaimage);
+                                centerImageView.setImageResource(R.drawable.topone);
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -151,7 +151,7 @@ public class DisplaySettingsActivity extends AppCompatActivity {
         } else {
             centerImageView.setVisibility(View.VISIBLE);
             if (selectedId == R.id.chrRecommended) {
-                centerImageView.setImageResource(R.drawable.betaimage);
+                centerImageView.setImageResource(R.drawable.topone);
             } else if (selectedId == R.id.chrChoiced) {
                 String uriString = prefs.getString(PrefKeys.PREF_CENTER_IMAGE_URI, null);
                 if (uriString != null && !uriString.contains("com.google.android.apps.photos")) {
@@ -160,13 +160,13 @@ public class DisplaySettingsActivity extends AppCompatActivity {
                         if (bitmap != null) {
                             centerImageView.setImageBitmap(bitmap);
                         } else {
-                            centerImageView.setImageResource(R.drawable.betaimage);
+                            centerImageView.setImageResource(R.drawable.topone);
                         }
                     } catch (Exception e) {
                         ImageRecoveryHelper.tryRecoverAndDisplay(this, uriString, centerImageView, prefs);
                     }
                 } else {
-                    centerImageView.setImageResource(R.drawable.betaimage);
+                    centerImageView.setImageResource(R.drawable.topone);
                 }
             }
         }

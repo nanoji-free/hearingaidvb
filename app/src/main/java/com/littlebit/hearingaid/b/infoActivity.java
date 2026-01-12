@@ -59,11 +59,11 @@ public class infoActivity extends AppCompatActivity {
                     .show();
         });
 
-        // 「音が出ないときは？」ボタン
+        // 「困った時は」ボタン
         micNoticeButton = findViewById(R.id.micNoticeButton);
         micNoticeButton.setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(infoActivity.this);
-            builder.setTitle("マイクの使用について")
+            builder.setTitle("困ったときは")
                     .setMessage(getString(R.string.mic_permission_notice))
                     .setPositiveButton("OK", null)
                     .show();

@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,7 +27,21 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
+import com.android.billingclient.api.BillingClient;
+import com.android.billingclient.api.BillingClientStateListener;
+import com.android.billingclient.api.BillingFlowParams;
+import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ProductDetails;
+import com.android.billingclient.api.Purchase;
+import com.android.billingclient.api.QueryProductDetailsParams;
+
+import java.util.Collections;
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
+            // Billing
+            private BillingClient billingClient;
+            private ProductDetails premiumProductDetails;
             private SharedPreferences prefs;
             private ConstraintLayout rootLayout;
             private float savedBalance;// 現在はService通知用。将来的にUI表示にも使う可能性あり
@@ -46,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
             private Button button_easysettings;
             private Button button_toInfoButton;
             private ImageView centerImage;
+            private Button button_moresettings;
 
             // 録音・再生状態ほか
             private boolean isStreaming = false;
@@ -71,6 +87,15 @@ public class MainActivity extends AppCompatActivity {
                 if (rootLayout != null) {
                     DispHelper.applySavedBackground(this, rootLayout);
                 }
+                // FireBaseのクラッシュレポートテスト用のボタン
+                //Button crashButton = findViewById(R.id.crashButton);
+                // ボタンを押したら強制クラッシュ
+                //crashButton.setOnClickListener(view -> {
+                //    throw new RuntimeException("Test Crash: Firebase Crashlytics動作確認用");
+                //});
+                //　 ↑　FireBaseのクラッシュレポートテスト用のボタン。不要時は行頭に「//」を付してコメントアウト
+
+
                 toggleButton = findViewById(R.id.toggleButton);
                 statusText = findViewById(R.id.statusText);
                 volumeSeekBar = findViewById(R.id.volumeSeekBar);
@@ -260,7 +285,54 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(MainActivity.this, EasysettingsActivity.class);
                     startActivity(intent);
                 });
+
+                //繊維ボタン（「さらに設定」ボタン）
+                button_moresettings = findViewById(R.id.button_moresettings);
+                button_moresettings.setOnClickListener(v -> {
+                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                    startActivity(intent);
+                });
+
+                // ★★★ 課金制限（グレーアウト処理）ここから ★★★
+                boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
+
+                if (!isPremium) {
+                    // グレーアウト（透明度を下げる）
+                    button_settings.setAlpha(0.4f);
+                    button_easysettings.setAlpha(0.4f);
+                    button_moresettings.setAlpha(0.4f);
+
+                    // 押せないようにする（今回は押せなくはしないのでコメントアウトのみ。今後の参考のために残してい置く）
+                    //button_settings.setEnabled(false);
+                    //button_easysettings.setEnabled(false);
+                    //button_moresettings.setEnabled(false);
+
+                    // 押したらダイアログを出す（Enabled=false だとクリックできないので OnClickListener を上書き）
+                    View.OnClickListener lockedListener = v -> {
+                        new AlertDialog.Builder(MainActivity.this)
+                                .setTitle("無料期間が終了しました")
+                                .setMessage(
+                                        "無料期間が終了したため、この設定はプレミアム版の機能となりました。\n\n" +
+                                        "今のままでもアプリはそのままご利用いただけます。\n" +
+                                        "設定は保存されていますので必要に応じてアップグレードをご検討ください。"
+                                )
+                                .setPositiveButton("アップグレードする", (dialog, which) -> {
+                                    launchPurchaseFlow();
+                                })
+                                .setNegativeButton("あとで考える", null)
+                                .show();
+                    };
+
+                    button_settings.setOnClickListener(lockedListener);
+                    button_easysettings.setOnClickListener(lockedListener);
+                    button_moresettings.setOnClickListener(lockedListener);
+                }
+                // ★★★ 課金制限（グレーアウト処理）ここまで ★★★
+
+                // Billing 初期化
+                setupBillingClient();
             }
+
 
         private void checkPermissionAndStart() {
             boolean isSafeMode = prefs.getBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, false);
@@ -362,6 +434,10 @@ public class MainActivity extends AppCompatActivity {
         DispHelper.applySavedBackground(this, rootLayout);
         updateUiFromPrefs(); // prefsからUIを再描画
 
+        // Streaming状態をprefsから読み込んで同期
+        isStreaming = prefs.getBoolean("isStreaming", false);
+        updateUi(); // トグルボタンやステータス表示を最新化
+
         if (isStreaming) {
             startService(buildStreamingIntent(false));
         }
@@ -406,7 +482,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             centerImage.setVisibility(View.VISIBLE);
             if (selectedId == R.id.chrRecommended) {
-                centerImage.setImageResource(R.drawable.betaimage);
+                centerImage.setImageResource(R.drawable.topone);
             } else if (selectedId == R.id.chrChoiced) {
                 String uriString = prefs.getString(PrefKeys.PREF_CENTER_IMAGE_URI, null);
                 if (uriString != null && !uriString.contains("com.google.android.apps.photos")) {
@@ -415,13 +491,13 @@ public class MainActivity extends AppCompatActivity {
                         if (bitmap != null) {
                             centerImage.setImageBitmap(bitmap);
                         } else {
-                            centerImage.setImageResource(R.drawable.betaimage);
+                            centerImage.setImageResource(R.drawable.topone);
                         }
                     } catch (Exception e) {
                         ImageRecoveryHelper.tryRecoverAndDisplay(this, uriString, centerImage, prefs);
                     }
                 } else {
-                    centerImage.setImageResource(R.drawable.betaimage);
+                    centerImage.setImageResource(R.drawable.topone);
                 }
             }
         }
@@ -462,6 +538,86 @@ public class MainActivity extends AppCompatActivity {
         int selectedId = prefs.getInt(PrefKeys.PREF_CENTER_SELECTION, R.id.chrRecommended);
 
     }
+    private void setupBillingClient() {
+        billingClient = BillingClient.newBuilder(this)
+                .setListener((billingResult, purchases) -> {
+                    // 購入更新時のコールバック
+                    if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
+                        handlePurchaseUpdate(purchases);
+                    }
+                })
+                .enablePendingPurchases()
+                .build();
+
+        billingClient.startConnection(new BillingClientStateListener() {
+            @Override
+            public void onBillingSetupFinished(BillingResult billingResult) {
+                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
+                    queryProductDetails();
+                }
+            }
+
+            @Override
+            public void onBillingServiceDisconnected() {
+                // 必要なら再接続処理
+            }
+        });
+    }
+    private void queryProductDetails() {
+        QueryProductDetailsParams.Product product =
+                QueryProductDetailsParams.Product.newBuilder()
+                        .setProductId("premium_monthly")
+                        .setProductType(BillingClient.ProductType.SUBS)
+                        .build();
+
+        QueryProductDetailsParams params =
+                QueryProductDetailsParams.newBuilder()
+                        .setProductList(Collections.singletonList(product))
+                        .build();
+
+        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsList) -> {
+            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
+                    && productDetailsList != null
+                    && !productDetailsList.isEmpty()) {
+
+                premiumProductDetails = productDetailsList.get(0);
+            }
+        });
+    }
+    private void launchPurchaseFlow() {
+        if (premiumProductDetails == null) {
+            Toast.makeText(this, "購入情報を取得できませんでした。しばらくしてからお試しください。", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        BillingFlowParams.ProductDetailsParams productDetailsParams =
+                BillingFlowParams.ProductDetailsParams.newBuilder()
+                        .setProductDetails(premiumProductDetails)
+                        .build();
+
+        BillingFlowParams billingFlowParams =
+                BillingFlowParams.newBuilder()
+                        .setProductDetailsParamsList(Collections.singletonList(productDetailsParams))
+                        .build();
+
+        billingClient.launchBillingFlow(this, billingFlowParams);
+    }
+    private void handlePurchaseUpdate(List<Purchase> purchases) {
+        for (Purchase purchase : purchases) {
+            if (purchase.getProducts().contains("premium_monthly")
+                    && purchase.getPurchaseState() == Purchase.PurchaseState.PURCHASED) {
+
+                // Premium 解放
+                prefs.edit().putBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, true).apply();
+
+                // UI を更新
+                recreate();
+
+                // SplashActivity 側の判定と整合性を取るために acknowledge は不要（サブスクは自動）
+            }
+        }
+    }
+
     private Intent buildStreamingIntent(boolean requestStreaming) {
         return new Intent(this, AudioStreamService.class)
              .putExtra(PrefKeys.EXTRA_APP_VOLUME, prefs.getFloat(PrefKeys.PREF_VOLUME, 0.65f))

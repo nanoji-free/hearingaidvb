@@ -20,8 +20,17 @@ public class HearingProfileActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        prefs = getSharedPreferences("hearing_prefs", MODE_PRIVATE);
         super.onCreate(savedInstanceState);
+
+        prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+        boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
+
+        if (!isPremium) {
+            startActivity(new Intent(this, PremiumRequiredActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_hearingprofile);
 
         //スライダー群と数値表示のバインド

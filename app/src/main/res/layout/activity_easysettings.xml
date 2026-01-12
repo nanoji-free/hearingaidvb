@@ -20,7 +20,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:text=" 【 かんたん設定 】"
-        android:textSize="24dp"
+        android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -49,7 +49,7 @@
         android:layout_height="wrap_content"
         android:text="モード選択"
         android:layout_marginTop="18dp"
-        android:textSize="20dp"
+        android:textSize="20sp"
         app:layout_constraintTop_toBottomOf="@+id/versionNoticeView"
         app:layout_constraintStart_toStartOf="parent"
         />
@@ -91,7 +91,7 @@
         android:layout_height="wrap_content"
         android:text="ユーザー設定"
         android:layout_marginTop="18dp"
-        android:textSize="20dp"
+        android:textSize="20sp"
         app:layout_constraintTop_toBottomOf="@+id/noiseEasySetButton"
         app:layout_constraintStart_toStartOf="parent"
         />
@@ -101,8 +101,8 @@
         android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:text="〔1〕："
-        android:layout_marginTop="6dp"
-        android:textSize="18dp"
+        android:layout_marginTop="16dp"
+        android:textSize="18sp"
         app:layout_constraintTop_toBottomOf="@+id/scineMemoryTitle"
         app:layout_constraintStart_toStartOf="parent"
         />
@@ -113,8 +113,8 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="0dp"
         android:text="記憶する"
-        app:layout_constraintTop_toTopOf="@id/scineMemoryTitleOne"
-        android:layout_marginTop="-8dp"
+        app:layout_constraintTop_toBottomOf="@id/scineMemoryTitle"
+        android:layout_marginTop="4dp"
         app:layout_constraintEnd_toEndOf="parent"
         />
     <Button
@@ -125,8 +125,8 @@
         android:text="呼び出す"
         app:layout_constraintStart_toEndOf="@id/scineMemoryTitleOne"
         app:layout_constraintEnd_toStartOf="@id/recSConeButton"
-        app:layout_constraintTop_toTopOf="@id/scineMemoryTitleOne"
-        android:layout_marginTop="-8dp"
+        app:layout_constraintTop_toBottomOf="@id/scineMemoryTitle"
+        android:layout_marginTop="4dp"
         />
 
     <TextView
@@ -134,8 +134,8 @@
         android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:text="〔2〕："
-        android:layout_marginTop="22dp"
-        android:textSize="18dp"
+        android:layout_marginTop="24dp"
+        android:textSize="18sp"
         app:layout_constraintTop_toBottomOf="@+id/scineMemoryTitleOne"
         app:layout_constraintStart_toStartOf="parent"
         />
@@ -146,8 +146,8 @@
         android:layout_marginStart="0dp"
         android:text="記憶する"
         app:layout_constraintStart_toEndOf="@id/callSCtwoButton"
-        app:layout_constraintTop_toTopOf="@id/scineMemoryTitleTwo"
-        android:layout_marginTop="-8dp"
+        app:layout_constraintTop_toBottomOf="@id/callSConeButton"
+        android:layout_marginTop="4dp"
         app:layout_constraintEnd_toEndOf="parent"
         />
     <Button
@@ -158,8 +158,8 @@
         android:text="呼び出す"
         app:layout_constraintStart_toEndOf="@id/scineMemoryTitleTwo"
         app:layout_constraintEnd_toStartOf="@id/recSCtwoButton"
-        app:layout_constraintTop_toTopOf="@id/scineMemoryTitleTwo"
-        android:layout_marginTop="-8dp"
+        app:layout_constraintTop_toBottomOf="@id/callSConeButton"
+        android:layout_marginTop="4dp"
         />
 
 
@@ -168,9 +168,9 @@
         android:layout_width="128dp"
         android:layout_height="wrap_content"
         android:text="戻る"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/callSCtwoButton"
+        android:layout_marginTop="32dp"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="16dp"
         />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

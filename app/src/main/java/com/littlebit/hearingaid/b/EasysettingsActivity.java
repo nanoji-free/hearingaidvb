@@ -40,6 +40,16 @@ public class EasysettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+        boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
+
+        if (!isPremium) {
+            startActivity(new Intent(this, PremiumRequiredActivity.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_easysettings);
         TextView versionNoticeView = findViewById(R.id.versionNoticeView);
 
@@ -48,7 +58,6 @@ public class EasysettingsActivity extends AppCompatActivity {
             DispHelper.applySavedBackground(this, rootLayout);
         }
 
-        prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
         float savedBalance = prefs.getFloat(PrefKeys.PREF_BALANCE, 0f);
         isStreaming = prefs.getBoolean("isStreaming", false);
 
@@ -87,7 +96,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_NOISE_FILTER, false)        // ノイズ除去OFF
                     .putBoolean(PrefKeys.PREF_EMPHASIS, true)            // 音声強調ON
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, true)      // 強調ブーストON
-                    .putBoolean(PrefKeys.PREF_MIC_TYPE, false)           // 内部マイク（外部マイクOFF）
+                    .putBoolean(PrefKeys.PREF_MIC_TYPE, true)           // 内部マイク（外部マイクOFF）
                     .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true) // 補正ON
                     .apply();
 
@@ -109,7 +118,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_NOISE_FILTER, true)        // ノイズ除去ON
                     .putBoolean(PrefKeys.PREF_EMPHASIS, true)            // 音声強調ON
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, false)      // 強調ブーストOFF
-                    .putBoolean(PrefKeys.PREF_MIC_TYPE, true) // 外部マイクを明示
+                    .putBoolean(PrefKeys.PREF_MIC_TYPE, false) // 外部マイクを明示
                     .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true) // 補正ON
                     .apply();
 
@@ -120,7 +129,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
             new AlertDialog.Builder(this)
-                    .setMessage("「お出かけモード」に切り替えました。\n\n有線イヤホンの利用をお勧めします。")
+                    .setMessage("「お出かけモード」に切り替えました。\n\n有線イヤホンの利用もご検討下さい。")
                     .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
                     .show();
         });
@@ -132,7 +141,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putBoolean(PrefKeys.PREF_NOISE_FILTER, true)        // ノイズ除去ON
                     .putBoolean(PrefKeys.PREF_EMPHASIS, true)            // 音声強調ON
                     .putBoolean(PrefKeys.PREF_SUPER_EMPHASIS, true)      // 強調ブーストON
-                    .putBoolean(PrefKeys.PREF_MIC_TYPE, true) // 外部マイクを明示
+                    .putBoolean(PrefKeys.PREF_MIC_TYPE, false) // 外部マイクを明示
                     .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, true) // 補正ON
                     .apply();
 
@@ -142,7 +151,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
             new AlertDialog.Builder(this)
-                    .setMessage("「騒音モード」に切り替えました。\n\n有線イヤホンの利用をお勧めします。")
+                    .setMessage("「騒音モード」に切り替えました。\n\n有線イヤホンの利用もご検討下さい。")
                     .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
                     .show();
         });

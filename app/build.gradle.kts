@@ -6,13 +6,13 @@ plugins {
 
 android {
     namespace = "com.littlebit.hearingaid.b"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.littlebit.hearingaid.b"
         minSdk = 28
-        targetSdk = 34
-        versionCode = 1
+        targetSdk = 35
+        versionCode = 8
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -43,9 +43,10 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("androidx.navigation:navigation-fragment:2.9.0")
     implementation("androidx.navigation:navigation-ui:2.9.0")
+    implementation("com.android.billingclient:billing:6.1.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     implementation("com.google.firebase:firebase-crashlytics:18.6.1")//FirebaseCrashlyticsの追加を宣言
-    implementation("com.google.firebase:firebase-analytics:21.5.0")//FirebaseAnalyticsの追加を宣言
+
 }

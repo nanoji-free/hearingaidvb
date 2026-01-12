@@ -13,7 +13,7 @@
 
         <TextView
             android:id="@+id/fittingTitle"
-            android:text="【聞こえの調整】"
+            android:text="【フィッティング】"
             android:textSize="20sp"
             android:textStyle="bold"
             android:layout_height="wrap_content"
@@ -44,7 +44,7 @@
 
         <TextView
             android:id="@+id/fittingInstruction"
-            android:text="250Hzの音を流します。聞こえるところまでスライダーを動かしてください"
+            android:text="250Hzの音を流します。\n聞こえるところまでスライダーを動かしてください。"
             android:textSize="16sp"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"

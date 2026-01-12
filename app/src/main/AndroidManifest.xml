@@ -13,6 +13,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="耳みみエイド"
         android:theme="@style/Theme.AppCompat">
+
         <activity
             android:name=".SettingsActivity"
             android:screenOrientation="portrait"
@@ -45,6 +46,7 @@
             android:screenOrientation="portrait"
             android:exported="false"
             />
+        <activity android:name=".PremiumRequiredActivity" />
         <activity
             android:name=".SplashActivity"
             android:exported="true"
