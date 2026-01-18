@@ -20,6 +20,7 @@ public class PrefKeys {
 
     public static final String PREF_CURRENT_VERSION_CODE = "currentVersionCode";//削除を検討中20251024、バ-ジョンコードの動的対応が不要なら削除
     public static final String PREF_INITIALIZED  = "pref_initialized";  // 初回起動フラグ//利用の可否が保留中
+    public static final String PREF_TRIAL_START = "trial_start";
 
     public static final String EXTRA_APP_VOLUME = "extra_app_volume";
     public static final String EXTRA_BALANCE = "extra_balance";

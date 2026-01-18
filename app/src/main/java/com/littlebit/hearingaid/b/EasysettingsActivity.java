@@ -305,14 +305,18 @@ public class EasysettingsActivity extends AppCompatActivity {
                         ? packageInfo.getLongVersionCode()
                         : packageInfo.versionCode;
 
+                //ここからコメントアウト（無償配布版）
+                //
                 if (remoteVersionCode > currentVersionCode) {
-                    //
-                    String message = "新しいバージョンにアップデートできます！\n\n▶ 詳細はこちら: https://play.google.com/store/apps/details?id=com.github.nanoji_free.hearingaidvb";
+                    String message = "新しいバージョンにアップデートできます！\n\n▶ 詳細はこちら: https://play.google.com/store/apps/details?id=com.littlebit.hearingaid.b\n";
                     runOnUiThread(() -> {
                         versionNoticeView.setText(message);
                         versionNoticeView.setVisibility(View.VISIBLE);
                     });
                 }
+                //
+                //ここまでコメントアウトする（無償配布版）
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

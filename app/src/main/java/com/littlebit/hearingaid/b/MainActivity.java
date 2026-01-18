@@ -43,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
             private BillingClient billingClient;
             private ProductDetails premiumProductDetails;
             private SharedPreferences prefs;
+            private boolean isTrial;            // 無料期間中フラグ
+            private boolean isFeatureUnlocked;  // 機能解放フラグ（Premium または無料期間）
             private ConstraintLayout rootLayout;
             private float savedBalance;// 現在はService通知用。将来的にUI表示にも使う可能性あり
 
@@ -78,6 +80,20 @@ public class MainActivity extends AppCompatActivity {
                 boolean isSafeMode = getIntent().getBooleanExtra("SAFE_MODE", false);
 
                 prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+
+
+                // ★★★ 無料期間判定ロジック ここから ★★★
+                long trialStart = prefs.getLong(PrefKeys.PREF_TRIAL_START, 0L);
+                long daysSinceStart = 0L;
+                if (trialStart > 0L) {
+                    long now = System.currentTimeMillis();
+                    daysSinceStart = (now - trialStart) / (1000L * 60L * 60L * 24L);
+                }
+
+                isTrial = (trialStart > 0L) && (daysSinceStart < 40L);// 30日なら 30L に
+                boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
+                isFeatureUnlocked = isPremium || isTrial;
+                // ★★★ 無料期間判定ロジック ここまで ★★★
 
                 prefs.edit().putBoolean(PrefKeys.PREF_SAFE_MODE_ENABLED, isSafeMode).apply();
 
@@ -294,9 +310,9 @@ public class MainActivity extends AppCompatActivity {
                 });
 
                 // ★★★ 課金制限（グレーアウト処理）ここから ★★★
-                boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
+                //boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
 
-                if (!isPremium) {
+                if (!isFeatureUnlocked) {
                     // グレーアウト（透明度を下げる）
                     button_settings.setAlpha(0.4f);
                     button_easysettings.setAlpha(0.4f);
@@ -590,9 +606,22 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // --- offerToken を取得 ---
+        List<ProductDetails.SubscriptionOfferDetails> offerDetails =
+                premiumProductDetails.getSubscriptionOfferDetails();
+
+        if (offerDetails == null || offerDetails.isEmpty()) {
+            Toast.makeText(this, "オファー情報を取得できませんでした。", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String offerToken = offerDetails.get(0).getOfferToken();
+
+        // --- ProductDetailsParams に offerToken をセット ---
         BillingFlowParams.ProductDetailsParams productDetailsParams =
                 BillingFlowParams.ProductDetailsParams.newBuilder()
                         .setProductDetails(premiumProductDetails)
+                        .setOfferToken(offerToken)
                         .build();
 
         BillingFlowParams billingFlowParams =

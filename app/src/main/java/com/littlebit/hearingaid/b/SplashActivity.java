@@ -3,6 +3,7 @@ package com.littlebit.hearingaid.b;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,6 +28,8 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        saveFirstLaunchDateIfNeeded();
 
         //セーフモードの導入関連コード（初期化）
         getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE)
@@ -145,5 +148,14 @@ public class SplashActivity extends AppCompatActivity {
             return availMem < threshold;
         }
         return false;
+    }
+    private void saveFirstLaunchDateIfNeeded() {
+        SharedPreferences prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+
+        if (!prefs.contains(PrefKeys.PREF_TRIAL_START)) {
+            prefs.edit()
+                    .putLong(PrefKeys.PREF_TRIAL_START, System.currentTimeMillis())
+                    .apply();
+        }
     }
 }

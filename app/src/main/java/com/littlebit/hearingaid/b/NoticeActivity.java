@@ -59,12 +59,17 @@ public class NoticeActivity extends AppCompatActivity{
 
                 StringBuilder messageBuilder = new StringBuilder();
 
+                //無償配布版のコメントアウトはここから。
+                //
                 // 🔔 アップデート通知を先頭に追加
                 if (remoteVersionCode > currentVersionCode) {
                     messageBuilder
                             .append("🔔 新しいバージョンがあります！\n")
-                            .append("▶ 詳細: https://play.google.com/store/apps/details?id=com.github.nanoji_free.hearingaidvb\n\n");
+                            .append("▶ 詳細: https://play.google.com/store/apps/details?id=com.littlebit.hearingaid.b\n\n");
                 }
+                //
+                //必要に応じてここまでコメントアウト（無償配布版はコメントアウトが必要）
+
 
                 // 通常のお知らせを追加
                 for (int i = 0; i < notices.length(); i++) {
