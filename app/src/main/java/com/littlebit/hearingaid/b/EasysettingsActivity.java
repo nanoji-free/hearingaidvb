@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -42,14 +43,27 @@ public class EasysettingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
+
+        // 課金フラグが立っているかを判定
         boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
 
-        if (!isPremium) {
+        // 無料期間の計算（MainActivity と同じ）
+        long trialStart = prefs.getLong(PrefKeys.PREF_TRIAL_START, 0L);
+        long daysSinceStart = 0L;
+        if (trialStart > 0L) {
+            long now = System.currentTimeMillis();
+            daysSinceStart = (now - trialStart) / (1000L * 60L * 60L * 24L);
+        }
+        boolean isTrial = (trialStart > 0L) && (daysSinceStart < 40L);
+
+        //課金されているか、またはトライアル期間なのかのフラグを作成して判定する
+        boolean isFeatureUnlocked = isPremium || isTrial;
+
+        if (!isFeatureUnlocked) {
             startActivity(new Intent(this, PremiumRequiredActivity.class));
             finish();
             return;
         }
-
         setContentView(R.layout.activity_easysettings);
         TextView versionNoticeView = findViewById(R.id.versionNoticeView);
 
@@ -129,7 +143,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
             new AlertDialog.Builder(this)
-                    .setMessage("「お出かけモード」に切り替えました。\n\n有線イヤホンの利用もご検討下さい。")
+                    .setMessage("「お出かけモード」に切り替えました。\n")
                     .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
                     .show();
         });
@@ -151,7 +165,7 @@ public class EasysettingsActivity extends AppCompatActivity {
                         .putExtra(PrefKeys.EXTRA_REQUEST_STREAMING, true));
             }
             new AlertDialog.Builder(this)
-                    .setMessage("「騒音モード」に切り替えました。\n\n有線イヤホンの利用もご検討下さい。")
+                    .setMessage("「騒音モード」に切り替えました。\n")
                     .setPositiveButton(" OK ", (dialog, which) -> dialog.dismiss())
                     .show();
         });
@@ -179,6 +193,16 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putFloat(PrefKeys.PREF_VOLUME_BOOST, prefs.getFloat(PrefKeys.PRESET1_VOLUME_BOOST, 0f))
                     .putFloat(PrefKeys.PREF_DEPTH_SCALER, prefs.getFloat(PrefKeys.PRESET1_DEPTH_SCALER, 1.0f))
                     .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, prefs.getBoolean(PrefKeys.PRESET1_HEARING_PROFILE_ENABLED, false)) // 補正機能ON/OFF
+                    .putFloat(PrefKeys.CORRECTION_L_250, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_L_250, 0f))
+                    .putFloat(PrefKeys.CORRECTION_L_500, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_L_500, 0f))
+                    .putFloat(PrefKeys.CORRECTION_L_1000, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_L_1000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_L_2000, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_L_2000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_L_4000, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_L_4000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_250, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_R_250, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_500, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_R_500, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_1000, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_R_1000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_2000, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_R_2000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_4000, prefs.getFloat(PrefKeys.PRESET1_CORRECTION_R_4000, 0f))
                     .apply();
 
             if (isStreaming) {
@@ -209,6 +233,16 @@ public class EasysettingsActivity extends AppCompatActivity {
                                 .putFloat(PrefKeys.PRESET1_VOLUME_BOOST, prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0f))       // ブースト係数
                                 .putFloat(PrefKeys.PRESET1_DEPTH_SCALER, prefs.getFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f))     // 深さスケーラ
                                 .putBoolean(PrefKeys.PRESET1_HEARING_PROFILE_ENABLED, prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false)) // 補正機能ON/OFF
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_L_250, prefs.getFloat(PrefKeys.CORRECTION_L_250, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_L_500, prefs.getFloat(PrefKeys.CORRECTION_L_500, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_L_1000, prefs.getFloat(PrefKeys.CORRECTION_L_1000, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_L_2000, prefs.getFloat(PrefKeys.CORRECTION_L_2000, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_L_4000, prefs.getFloat(PrefKeys.CORRECTION_L_4000, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_R_250, prefs.getFloat(PrefKeys.CORRECTION_R_250, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_R_500, prefs.getFloat(PrefKeys.CORRECTION_R_500, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_R_1000, prefs.getFloat(PrefKeys.CORRECTION_R_1000, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_R_2000, prefs.getFloat(PrefKeys.CORRECTION_R_2000, 0f))
+                                .putFloat(PrefKeys.PRESET1_CORRECTION_R_4000, prefs.getFloat(PrefKeys.CORRECTION_R_4000, 0f))
                                 .apply();
 
                         Toast.makeText(this, "プリセット1を記憶しました。", Toast.LENGTH_SHORT).show();
@@ -239,6 +273,16 @@ public class EasysettingsActivity extends AppCompatActivity {
                     .putFloat(PrefKeys.PREF_VOLUME_BOOST, prefs.getFloat(PrefKeys.PRESET2_VOLUME_BOOST, 0f))
                     .putFloat(PrefKeys.PREF_DEPTH_SCALER, prefs.getFloat(PrefKeys.PRESET2_DEPTH_SCALER, 1.0f))
                     .putBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, prefs.getBoolean(PrefKeys.PRESET2_HEARING_PROFILE_ENABLED, false))
+                    .putFloat(PrefKeys.CORRECTION_L_250, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_L_250, 0f))
+                    .putFloat(PrefKeys.CORRECTION_L_500, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_L_500, 0f))
+                    .putFloat(PrefKeys.CORRECTION_L_1000, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_L_1000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_L_2000, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_L_2000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_L_4000, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_L_4000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_250, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_R_250, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_500, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_R_500, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_1000, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_R_1000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_2000, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_R_2000, 0f))
+                    .putFloat(PrefKeys.CORRECTION_R_4000, prefs.getFloat(PrefKeys.PRESET2_CORRECTION_R_4000, 0f))
                     .apply();
 
             if (isStreaming) {
@@ -269,6 +313,16 @@ public class EasysettingsActivity extends AppCompatActivity {
                                 .putFloat(PrefKeys.PRESET2_VOLUME_BOOST, prefs.getFloat(PrefKeys.PREF_VOLUME_BOOST, 0f))       // ブースト係数
                                 .putFloat(PrefKeys.PRESET2_DEPTH_SCALER, prefs.getFloat(PrefKeys.PREF_DEPTH_SCALER, 1.0f))     // 深さスケーラ
                                 .putBoolean(PrefKeys.PRESET2_HEARING_PROFILE_ENABLED, prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false))// 補正機能ON/OFF
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_L_250, prefs.getFloat(PrefKeys.CORRECTION_L_250, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_L_500, prefs.getFloat(PrefKeys.CORRECTION_L_500, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_L_1000, prefs.getFloat(PrefKeys.CORRECTION_L_1000, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_L_2000, prefs.getFloat(PrefKeys.CORRECTION_L_2000, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_L_4000, prefs.getFloat(PrefKeys.CORRECTION_L_4000, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_R_250, prefs.getFloat(PrefKeys.CORRECTION_R_250, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_R_500, prefs.getFloat(PrefKeys.CORRECTION_R_500, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_R_1000, prefs.getFloat(PrefKeys.CORRECTION_R_1000, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_R_2000, prefs.getFloat(PrefKeys.CORRECTION_R_2000, 0f))
+                                .putFloat(PrefKeys.PRESET2_CORRECTION_R_4000, prefs.getFloat(PrefKeys.CORRECTION_R_4000, 0f))
                                 .apply();
 
                         Toast.makeText(this, "プリセット2を記憶しました。", Toast.LENGTH_SHORT).show();
@@ -300,7 +354,11 @@ public class EasysettingsActivity extends AppCompatActivity {
                 JSONObject json = new JSONObject(result.toString());
                 int remoteVersionCode = json.getInt("versionCode");
 
-                PackageInfo packageInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+                PackageInfo packageInfo =
+                        EasysettingsActivity.this.getPackageManager().getPackageInfo(
+                                getPackageName(),
+                                PackageManager.PackageInfoFlags.of(0)
+                        );
                 long currentVersionCode = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
                         ? packageInfo.getLongVersionCode()
                         : packageInfo.versionCode;

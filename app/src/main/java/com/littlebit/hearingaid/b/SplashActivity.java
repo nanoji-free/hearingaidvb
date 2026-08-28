@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.QueryPurchasesParams;
 
@@ -77,7 +78,11 @@ public class SplashActivity extends AppCompatActivity {
                 .setListener((billingResult, purchases) -> {
                     // 購入更新時のコールバック（今回は特に処理不要）
                 })
-                .enablePendingPurchases()
+                .enablePendingPurchases(
+                        PendingPurchasesParams.newBuilder()
+                                .enableOneTimeProducts()   // 単発購入を有効化
+                                .build()
+                )
                 .build();
 
         billingClient.startConnection(new BillingClientStateListener() {

@@ -70,4 +70,57 @@ public class PrefKeys {
     public static final String EXTRA_CORRECTION_2000 = "extra_correction_2000";
     public static final String EXTRA_CORRECTION_4000 = "extra_correction_4000";
 
+    // 左右対応を目的に増築
+    // 左右別の増幅設定用パラメータ（5バンド）
+    public static final String CORRECTION_L_250 = "correction_l_250";
+    public static final String CORRECTION_L_500 = "correction_l_500";
+    public static final String CORRECTION_L_1000 = "correction_l_1000";
+    public static final String CORRECTION_L_2000 = "correction_l_2000";
+    public static final String CORRECTION_L_4000 = "correction_l_4000";
+
+    public static final String CORRECTION_R_250 = "correction_r_250";
+    public static final String CORRECTION_R_500 = "correction_r_500";
+    public static final String CORRECTION_R_1000 = "correction_r_1000";
+    public static final String CORRECTION_R_2000 = "correction_r_2000";
+    public static final String CORRECTION_R_4000 = "correction_r_4000";
+
+    // 聴力補正値をサービスに渡すためのキー（ステレオ）
+    public static final String EXTRA_CORRECTION_L_250 = "extra_correction_l_250";
+    public static final String EXTRA_CORRECTION_L_500 = "extra_correction_l_500";
+    public static final String EXTRA_CORRECTION_L_1000 = "extra_correction_l_1000";
+    public static final String EXTRA_CORRECTION_L_2000 = "extra_correction_l_2000";
+    public static final String EXTRA_CORRECTION_L_4000 = "extra_correction_l_4000";
+
+    public static final String EXTRA_CORRECTION_R_250 = "extra_correction_r_250";
+    public static final String EXTRA_CORRECTION_R_500 = "extra_correction_r_500";
+    public static final String EXTRA_CORRECTION_R_1000 = "extra_correction_r_1000";
+    public static final String EXTRA_CORRECTION_R_2000 = "extra_correction_r_2000";
+    public static final String EXTRA_CORRECTION_R_4000 = "extra_correction_r_4000";
+
+    //　プリセットの設定（ステレオ）
+
+    //　プリセット１の左
+    public static final String PRESET1_CORRECTION_L_250 = "preset1_correction_l_250";
+    public static final String PRESET1_CORRECTION_L_500 = "preset1_correction_l_500";
+    public static final String PRESET1_CORRECTION_L_1000 = "preset1_correction_l_1000";
+    public static final String PRESET1_CORRECTION_L_2000 = "preset1_correction_l_2000";
+    public static final String PRESET1_CORRECTION_L_4000 = "preset1_correction_l_4000";
+    //　プリセット1の右
+    public static final String PRESET1_CORRECTION_R_250 = "preset1_correction_r_250";
+    public static final String PRESET1_CORRECTION_R_500 = "preset1_correction_r_500";
+    public static final String PRESET1_CORRECTION_R_1000 = "preset1_correction_r_1000";
+    public static final String PRESET1_CORRECTION_R_2000 = "preset1_correction_r_2000";
+    public static final String PRESET1_CORRECTION_R_4000 = "preset1_correction_r_4000";
+    //　プリセット２の左
+    public static final String PRESET2_CORRECTION_L_250 = "preset2_correction_l_250";
+    public static final String PRESET2_CORRECTION_L_500 = "preset2_correction_l_500";
+    public static final String PRESET2_CORRECTION_L_1000 = "preset2_correction_l_1000";
+    public static final String PRESET2_CORRECTION_L_2000 = "preset2_correction_l_2000";
+    public static final String PRESET2_CORRECTION_L_4000 = "preset2_correction_l_4000";
+    //　プリセット２の右
+    public static final String PRESET2_CORRECTION_R_250 = "preset2_correction_r_250";
+    public static final String PRESET2_CORRECTION_R_500 = "preset2_correction_r_500";
+    public static final String PRESET2_CORRECTION_R_1000 = "preset2_correction_r_1000";
+    public static final String PRESET2_CORRECTION_R_2000 = "preset2_correction_r_2000";
+    public static final String PRESET2_CORRECTION_R_4000 = "preset2_correction_r_4000";
 }

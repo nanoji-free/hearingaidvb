@@ -50,14 +50,26 @@ public class SettingsActivity extends AppCompatActivity {
 
         prefs = getSharedPreferences(PrefKeys.PREFS_NAME, MODE_PRIVATE);
 
+        // 課金フラグが立っているかを判定
         boolean isPremium = prefs.getBoolean(PrefKeys.PREF_PREMIUM_UNLOCKED, false);
 
-        if (!isPremium) {
+        // 無料期間の計算（MainActivity と同じ）
+        long trialStart = prefs.getLong(PrefKeys.PREF_TRIAL_START, 0L);
+        long daysSinceStart = 0L;
+        if (trialStart > 0L) {
+            long now = System.currentTimeMillis();
+            daysSinceStart = (now - trialStart) / (1000L * 60L * 60L * 24L);
+        }
+        boolean isTrial = (trialStart > 0L) && (daysSinceStart < 40L);
+
+        //課金されているか、またはトライアル期間なのかのフラグを作成して判定する
+        boolean isFeatureUnlocked = isPremium || isTrial;
+
+        if (!isFeatureUnlocked) {
             startActivity(new Intent(this, PremiumRequiredActivity.class));
             finish();
             return;
         }
-
 
         setContentView(R.layout.activity_settings);
 
@@ -292,7 +304,7 @@ public class SettingsActivity extends AppCompatActivity {
         //「聞こえ方の設定へ」遷移ボタン　toChangeHearingButton
         toChangeHearingButton = findViewById(R.id.toChangeHearingButton);
         toChangeHearingButton.setOnClickListener(v -> {
-            Intent intent = new Intent(SettingsActivity.this, HearingProfileActivity.class);
+            Intent intent = new Intent(SettingsActivity.this, HearingProfileMenuActivity.class);
             startActivity(intent);
         });
 

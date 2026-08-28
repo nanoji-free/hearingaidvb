@@ -31,6 +31,7 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.QueryProductDetailsParams;
@@ -302,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(intent);
                 });
 
-                //繊維ボタン（「さらに設定」ボタン）
+                //遷移ボタン（「さらに設定」ボタン）
                 button_moresettings = findViewById(R.id.button_moresettings);
                 button_moresettings.setOnClickListener(v -> {
                     Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
@@ -562,7 +563,11 @@ public class MainActivity extends AppCompatActivity {
                         handlePurchaseUpdate(purchases);
                     }
                 })
-                .enablePendingPurchases()
+                .enablePendingPurchases(
+                        PendingPurchasesParams.newBuilder()
+                                .enableOneTimeProducts()
+                                .build()
+                )
                 .build();
 
         billingClient.startConnection(new BillingClientStateListener() {
@@ -591,12 +596,12 @@ public class MainActivity extends AppCompatActivity {
                         .setProductList(Collections.singletonList(product))
                         .build();
 
-        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsList) -> {
+        billingClient.queryProductDetailsAsync(params, (billingResult, queryProductDetailsResult) -> {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
-                    && productDetailsList != null
-                    && !productDetailsList.isEmpty()) {
+                    && queryProductDetailsResult != null
+                    && !queryProductDetailsResult.getProductDetailsList().isEmpty()) {
 
-                premiumProductDetails = productDetailsList.get(0);
+                premiumProductDetails = queryProductDetailsResult.getProductDetailsList().get(0);
             }
         });
     }

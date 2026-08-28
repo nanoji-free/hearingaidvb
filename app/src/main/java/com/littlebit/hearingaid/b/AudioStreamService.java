@@ -168,6 +168,10 @@ public class AudioStreamService extends Service {
     private volatile float leftRatio  = 0.7071f; // center = 1/√2
     private volatile float rightRatio = 0.7071f;
 
+    //　左右の調整係数
+    private float correctionL250, correctionL500, correctionL1000, correctionL2000, correctionL4000;
+    private float correctionR250, correctionR500, correctionR1000, correctionR2000, correctionR4000;
+
     private Pair<Integer, Integer> findBestSampleRate() {
         final int[] candidates = {48000, 44100, 22050, 16000, 11025, 8000};
         int channelIn = AudioFormat.CHANNEL_IN_MONO;
@@ -253,11 +257,18 @@ public class AudioStreamService extends Service {
                 : prefs.getBoolean(PrefKeys.PREF_HEARING_PROFILE_CORRECTION, false);
         this.hearingProfileEnabled = hearingProfileEnabled;
 
-        float correction250 = prefs.getFloat(PrefKeys.CORRECTION_250, 1.0f);
-        float correction500 = prefs.getFloat(PrefKeys.CORRECTION_500, 1.0f);
-        float correction1000 = prefs.getFloat(PrefKeys.CORRECTION_1000, 1.0f);
-        float correction2000 = prefs.getFloat(PrefKeys.CORRECTION_2000, 1.0f);
-        float correction4000 = prefs.getFloat(PrefKeys.CORRECTION_4000, 1.0f);
+        correctionL250 = prefs.getFloat(PrefKeys.CORRECTION_L_250, 1.0f);
+        correctionL500 = prefs.getFloat(PrefKeys.CORRECTION_L_500, 1.0f);
+        correctionL1000 = prefs.getFloat(PrefKeys.CORRECTION_L_1000, 1.0f);
+        correctionL2000 = prefs.getFloat(PrefKeys.CORRECTION_L_2000, 1.0f);
+        correctionL4000 = prefs.getFloat(PrefKeys.CORRECTION_L_4000, 1.0f);
+
+        correctionR250 = prefs.getFloat(PrefKeys.CORRECTION_R_250, 1.0f);
+        correctionR500 = prefs.getFloat(PrefKeys.CORRECTION_R_500, 1.0f);
+        correctionR1000 = prefs.getFloat(PrefKeys.CORRECTION_R_1000, 1.0f);
+        correctionR2000 = prefs.getFloat(PrefKeys.CORRECTION_R_2000, 1.0f);
+        correctionR4000 = prefs.getFloat(PrefKeys.CORRECTION_R_4000, 1.0f);
+
 
         // Intentがあれば状態を更新（prefsにも反映）
         if (intent != null) {
@@ -301,6 +312,43 @@ public class AudioStreamService extends Service {
             if (intent.hasExtra(PrefKeys.EXTRA_BALANCE)) {
                 setBalance(balance);
                 prefs.edit().putFloat(PrefKeys.PREF_BALANCE, balance).apply();
+            }
+
+            if (intent != null) {
+
+                // 左耳
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_L_250)) {
+                    correctionL250 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_L_250, correctionL250);
+                }
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_L_500)) {
+                    correctionL500 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_L_500, correctionL500);
+                }
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_L_1000)) {
+                    correctionL1000 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_L_1000, correctionL1000);
+                }
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_L_2000)) {
+                    correctionL2000 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_L_2000, correctionL2000);
+                }
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_L_4000)) {
+                    correctionL4000 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_L_4000, correctionL4000);
+                }
+
+                // 右耳
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_R_250)) {
+                    correctionR250 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_R_250, correctionR250);
+                }
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_R_500)) {
+                    correctionR500 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_R_500, correctionR500);
+                }
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_R_1000)) {
+                    correctionR1000 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_R_1000, correctionR1000);
+                }
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_R_2000)) {
+                    correctionR2000 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_R_2000, correctionR2000);
+                }
+                if (intent.hasExtra(PrefKeys.EXTRA_CORRECTION_R_4000)) {
+                    correctionR4000 = intent.getFloatExtra(PrefKeys.EXTRA_CORRECTION_R_4000, correctionR4000);
+                }
             }
 
             if (requestStreaming && !isStreaming) {
@@ -466,7 +514,7 @@ public class AudioStreamService extends Service {
         // 入力（ステレオ）と処理用（モノラル）のバッファを確保
         pcmBuffer = new short[bufferSizeInShorts];          // ステレオデータ用に確保（LRLR...）
         final short[] monoBuffer = new short[bufferSizeInShorts]; // モノラル処理用(frames)
-        stereoOut  = new short[bufferSizeInShorts];     // 出力: ステレオ（LRLR...）
+        stereoOut  = new short[bufferSizeInShorts*2];     // 出力: ステレオ（LRLR...）
         // アプリ内ボリュームを反映
         setAppVolume(appVolume);//+volumeBoost*XvolZ);//XvolZはvolumeBoostに乗じる係数
         isStreaming = true;
@@ -502,10 +550,7 @@ public class AudioStreamService extends Service {
                     continue;
                 }
 
-                Log.d(TAG, "readCount = " + readCount);
-                Log.d(TAG, "rawInput[0] = " + buffer[0]);
-
-                if (readCount > 0) {
+                if (readCount== 0) continue;
                     /*
                     // ステレオ → モノラル中間値（(L+R)>>1）へ変換
                     int frames = readCount / 2; // ステレオ：2サンプル=1フレーム
@@ -531,13 +576,15 @@ public class AudioStreamService extends Service {
                     int frames;
                     if (channelIn == AudioFormat.CHANNEL_IN_MONO) {
                         // MONO入力の場合はそのまま処理
-                        frames = readCount;
+                        //frames = readCount;→安全策のため下の３行に振替え
+                        frames = Math.min(readCount, monoBuffer.length);
+                        int maxStereoFrames = stereoOut.length / 2;
+                        frames = Math.min(frames, maxStereoFrames);
+
                         for (int f = 0; f < frames; f++) {
                             double cut = buffer[f];
-                            //if (boostEnabled) {                   //20251115コメントアウト
-                            //    cut = boostRangeMono(cut);      // 帯域ブースト
-                            //}
-                            // 聴力プロファイル補正（20251115追加）
+
+                            // 聴力プロファイル補正
                             if (hearingProfileEnabled) {
                                 cut = applyHearingProfileBoost(cut);
                             }
@@ -554,11 +601,27 @@ public class AudioStreamService extends Service {
                            //クリップ処理
                             if (cut > Short.MAX_VALUE) cut = Short.MAX_VALUE;
                             else if (cut < Short.MIN_VALUE) cut = Short.MIN_VALUE;
-                            monoBuffer[f] = (short) Math.round(cut);
+                            monoBuffer[f] = (short) cut;
+                            double L = processLeft(cut);
+                            double R = processRight(cut);
+
+                            // クリップ処理（左右別）
+                            if (L > Short.MAX_VALUE) L = Short.MAX_VALUE;
+                            if (L < Short.MIN_VALUE) L = Short.MIN_VALUE;
+                            if (R > Short.MAX_VALUE) R = Short.MAX_VALUE;
+                            if (R < Short.MIN_VALUE) R = Short.MIN_VALUE;
+
+                            int i = f * 2;
+                            stereoOut[i]   = (short)L; // Left
+                            stereoOut[i+1] = (short)R; // Right
                         }
                     } else {
-                        // ステレオ入力の場合は左右を平均してモノラル化
+                        // ステレオ入力の場合
                         frames = readCount / 2;
+                        frames = Math.min(frames, monoBuffer.length);
+                        int maxStereoFrames = stereoOut.length / 2;
+                        frames = Math.min(frames, maxStereoFrames);
+
                         for (int f = 0; f < frames; f++) {
                             int i = f * 2;
                             int l = buffer[i];
@@ -585,7 +648,20 @@ public class AudioStreamService extends Service {
                             //クリップ処理
                             if (cut > Short.MAX_VALUE) cut = Short.MAX_VALUE;
                             else if (cut < Short.MIN_VALUE) cut = Short.MIN_VALUE;
-                            monoBuffer[f] = (short) Math.round(cut);
+
+                            monoBuffer[f] = (short) cut;
+                            double L = processLeft(cut);
+                            double R = processRight(cut);
+
+                            // クリップ処理（左右別）
+                            if (L > Short.MAX_VALUE) L = Short.MAX_VALUE;
+                            if (L < Short.MIN_VALUE) L = Short.MIN_VALUE;
+                            if (R > Short.MAX_VALUE) R = Short.MAX_VALUE;
+                            if (R < Short.MIN_VALUE) R = Short.MIN_VALUE;
+
+                            int idx = f * 2;
+                            stereoOut[idx]   = (short)L; // Left
+                            stereoOut[idx+1] = (short)R; // Right
                         }
                     }
 
@@ -625,27 +701,14 @@ public class AudioStreamService extends Service {
                     }
                     */
 
-                    // stereoOut のサイズを frames*2 に合わせる
-                    //　必要に応じて再確保（null またはサイズ不足時）
-                    if (stereoOut == null || stereoOut.length < frames * 2) {
-                        stereoOut = new short[frames * 2];
-                    }
-                    for (int f = 0; f < frames; f++) {
-                        short s = monoBuffer[f];
-                        int i = f << 1;
-                        stereoOut[i]     = s; // L
-                        stereoOut[i + 1] = s; // R
-                    }
-
                     // ステレオトラックへ書き込み（サンプル数は frames*2）
-                    Log.d(TAG, "stereoOut[0] = " + stereoOut[0] + ", stereoOut[1] = " + stereoOut[1]);
                     try {
                         audioTrack.write(stereoOut, 0, frames * 2);
                     }catch (IllegalStateException e){
                         Log.e(TAG, "audioTrack.write() failed", e);
                     }
                 }
-            }
+
             // スレッドループ終了後にリソース解放
             if(audioRecord != null){
                 audioRecord.stop();
@@ -1022,6 +1085,15 @@ public class AudioStreamService extends Service {
             sample += lpOut * (b.gain - 1.0);
         }
         return sample;
+    }
+
+    // 左右のパラメータを取り扱い出力内容を形成するメソッド
+    private double processLeft(double x) {
+        return x * correctionL250 * correctionL500 * correctionL1000 * correctionL2000 * correctionL4000;
+    }
+
+    private double processRight(double x) {
+        return x * correctionR250 * correctionR500 * correctionR1000 * correctionR2000 * correctionR4000;
     }
 
     //superEmphasisの挙動に関するメソッド

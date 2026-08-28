@@ -1,6 +1,7 @@
 package com.littlebit.hearingaid.b;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.AudioFormat;
@@ -11,11 +12,11 @@ import android.os.Handler;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.content.Intent;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-public class FittingActivity extends AppCompatActivity {
+public class FittingActivityRight extends AppCompatActivity {
+
     private AudioTrack toneTrack;
 
     private final int[] bands = {250, 500, 1000, 2000, 4000};
@@ -61,7 +62,7 @@ public class FittingActivity extends AppCompatActivity {
             return;
         }
 
-        setContentView(R.layout.activity_fitting);
+        setContentView(R.layout.activity_fitting_right);
 
         fittingTitle = findViewById(R.id.fittingTitle);
         fittingModeTitle = findViewById(R.id.fittingModeTitle);
@@ -94,7 +95,7 @@ public class FittingActivity extends AppCompatActivity {
         //「特定の帯域を調整する」ボタン
         startPartialFittingButton.setOnClickListener(v -> {
             String[] bandLabels = {"250Hz", "500Hz", "1000Hz", "2000Hz", "4000Hz"};
-            new AlertDialog.Builder(FittingActivity.this)
+            new AlertDialog.Builder(FittingActivityRight.this)
                     .setTitle("調整する帯域を選んでください")
                     .setItems(bandLabels, (dialog, which) -> {
                         currentBandIndex = which;
@@ -172,19 +173,19 @@ public class FittingActivity extends AppCompatActivity {
 
             switch (freq) {
                 case 250:
-                    prefs.edit().putFloat(PrefKeys.CORRECTION_250, gain).apply();
+                    prefs.edit().putFloat(PrefKeys.CORRECTION_R_250, gain).apply();
                     break;
                 case 500:
-                    prefs.edit().putFloat(PrefKeys.CORRECTION_500, gain).apply();
+                    prefs.edit().putFloat(PrefKeys.CORRECTION_R_500, gain).apply();
                     break;
                 case 1000:
-                    prefs.edit().putFloat(PrefKeys.CORRECTION_1000, gain).apply();
+                    prefs.edit().putFloat(PrefKeys.CORRECTION_R_1000, gain).apply();
                     break;
                 case 2000:
-                    prefs.edit().putFloat(PrefKeys.CORRECTION_2000, gain).apply();
+                    prefs.edit().putFloat(PrefKeys.CORRECTION_R_2000, gain).apply();
                     break;
                 case 4000:
-                    prefs.edit().putFloat(PrefKeys.CORRECTION_4000, gain).apply();
+                    prefs.edit().putFloat(PrefKeys.CORRECTION_R_4000, gain).apply();
                     break;
             }
             if (isPartialMode) {
@@ -237,7 +238,7 @@ public class FittingActivity extends AppCompatActivity {
         int durationMs = 10000;//　ビープ音の鳴動時間
         int numSamples = durationMs * sampleRate / 1000;
         double[] sample = new double[numSamples];
-        byte[] generatedSnd = new byte[2 * numSamples];
+        byte[] generatedSnd = new byte[4 * numSamples];
 
         for (int i = 0; i < numSamples; ++i) {
             sample[i] = Math.sin(2 * Math.PI * i / (sampleRate / freqHz));
@@ -245,13 +246,20 @@ public class FittingActivity extends AppCompatActivity {
 
         int idx = 0;
         for (final double dVal : sample) {
-            short val = (short) ((dVal * 32767.0) * volume);
-            generatedSnd[idx++] = (byte) (val & 0x00ff);
-            generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
+            short right = (short) ((dVal * 32767.0) * volume);
+            short left  = 0;
+
+            // L チャンネル
+            generatedSnd[idx++] = (byte) (left & 0x00ff);
+            generatedSnd[idx++] = (byte) ((left & 0xff00) >>> 8);
+            // R チャンネル
+            generatedSnd[idx++] = (byte) (right & 0x00ff);
+            generatedSnd[idx++] = (byte) ((right & 0xff00) >>> 8);
+
         }
 
         toneTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_OUT_MONO,
+                sampleRate, AudioFormat.CHANNEL_OUT_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT,
                 generatedSnd.length,
                 AudioTrack.MODE_STREAM);

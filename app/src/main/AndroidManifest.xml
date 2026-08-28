@@ -8,44 +8,57 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="耳みみエイド"
         android:theme="@style/Theme.AppCompat">
-
+        <activity
+            android:name=".FittingActivityLeft"
+            android:exported="false" />
+        <activity
+            android:name=".HearingProfileActivityRight"
+            android:exported="false" />
+        <activity
+            android:name=".HearingProfileActivityLeft"
+            android:exported="false" />
+        <activity
+            android:name=".HearingProfileMenuActivity"
+            android:exported="false" />
         <activity
             android:name=".SettingsActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".NoticeActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".EasysettingsActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".DisplaySettingsActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".infoActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".HearingProfileActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".FittingActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
-        <activity android:name=".GuideActivity"
-            android:screenOrientation="portrait"
             android:exported="false"
-            />
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".GuideActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity android:name=".PremiumRequiredActivity" />
         <activity
             android:name=".SplashActivity"
@@ -54,22 +67,19 @@
             android:theme="@style/Theme.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.AppCompat" />
-
-        <!-- サービス登録 -->
+            android:theme="@style/Theme.AppCompat" /> <!-- サービス登録 -->
         <service
             android:name=".AudioStreamService"
             android:foregroundServiceType="microphone|mediaProjection"
             tools:ignore="Instantiatable" />
-
     </application>
 
 </manifest>

@@ -10,6 +10,7 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.QueryProductDetailsParams;
@@ -45,9 +46,12 @@ public class PremiumRequiredActivity extends AppCompatActivity {
                         handlePurchaseUpdate(purchases);
                     }
                 })
-                .enablePendingPurchases()
+                .enablePendingPurchases(
+                        PendingPurchasesParams.newBuilder()
+                                .enableOneTimeProducts()   // 単発購入を有効化
+                                .build()
+                )
                 .build();
-
         billingClient.startConnection(new BillingClientStateListener() {
             @Override
             public void onBillingSetupFinished(BillingResult billingResult) {
@@ -75,12 +79,12 @@ public class PremiumRequiredActivity extends AppCompatActivity {
                         .setProductList(Collections.singletonList(product))
                         .build();
 
-        billingClient.queryProductDetailsAsync(params, (billingResult, productDetailsList) -> {
+        billingClient.queryProductDetailsAsync(params, (billingResult, queryProductDetailsResult) -> {
             if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK
-                    && productDetailsList != null
-                    && !productDetailsList.isEmpty()) {
+                    && queryProductDetailsResult != null
+                    && !queryProductDetailsResult.getProductDetailsList().isEmpty()) {
 
-                premiumProductDetails = productDetailsList.get(0);
+                premiumProductDetails = queryProductDetailsResult.getProductDetailsList().get(0);
             }
         });
     }
@@ -91,9 +95,19 @@ public class PremiumRequiredActivity extends AppCompatActivity {
             return;
         }
 
+        String offerToken = null;
+        if (premiumProductDetails.getSubscriptionOfferDetails() != null
+                && !premiumProductDetails.getSubscriptionOfferDetails().isEmpty()) {
+            offerToken = premiumProductDetails
+                    .getSubscriptionOfferDetails()
+                    .get(0)
+                    .getOfferToken();
+        }
+
         BillingFlowParams.ProductDetailsParams productDetailsParams =
                 BillingFlowParams.ProductDetailsParams.newBuilder()
                         .setProductDetails(premiumProductDetails)
+                        .setOfferToken(offerToken)
                         .build();
 
         BillingFlowParams billingFlowParams =
@@ -118,6 +132,14 @@ public class PremiumRequiredActivity extends AppCompatActivity {
                 // この画面は保険なので閉じるだけでOK
                 finish();
             }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (billingClient != null) {
+            billingClient.endConnection();   // ★ 重要：Activity終了後のコールバック防止
         }
     }
 }
